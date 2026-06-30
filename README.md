@@ -1,24 +1,21 @@
-# BMI CALCULATOR APP
+# BMI Calculator App
 
-![BMI-Calculator-App](https://zahid-career.vercel.app/)
+A Flutter app to calculate BMI, view results on a gauge, and save history locally.
 
-A new Flutter project.
-
-## 🛠 Built With
+## Built With
 
 | Tool | Version |
 |------|---------|
-| Flutter | 3.3.9 (stable) |
-| Dart | 2.18.5 |
-| DevTools | 2.15.0 |
-| Engine | 8f2221fbef |
-| Framework | b8f7f1f986 |
-| Java | 17.0.17 (Temurin) |
-
-
+| Flutter | 3.41.7 |
+| Dart | 3.11.5 |
+| Java | 17 |
+| Gradle | 8.14 |
+| Android Gradle Plugin | 8.11.1 |
+| Kotlin | 2.2.20 |
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if
+```bash
+flutter pub get
+flutter run
+```

@@ -1,43 +1,36 @@
-import 'dart:developer';
 import 'dart:io';
 import 'landing_page.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import '../Components/Action_Button.dart';
 import '../Components/Icon_Content.dart';
 import '../Components/Reusable_Bg.dart';
 import '../Components/RoundIcon_Button.dart';
 import '../constants.dart';
 import 'Results_Page.dart';
 import 'SavedResults_Page.dart';
-import '../Components/BottomContainer_Button.dart';
 import '../calculator_brain.dart';
 
-// ignore: must_be_immutable
 class InputPage extends StatefulWidget {
   final Gender? preSelectedGender;
   final File? profileImage;
 
-  InputPage({this.preSelectedGender, this.profileImage});
+  const InputPage({this.preSelectedGender, this.profileImage});
 
   @override
-  _InputPageState createState() => _InputPageState();
+  State<InputPage> createState() => _InputPageState();
 }
 
-//ENUMERATION : The action of establishing number of something , implicit way
 enum Gender {
   male,
   female,
 }
 
 class _InputPageState extends State<InputPage> {
-  //by default male will be selected
-
   late Gender selectedGender;
   int feet = 5;
   int inches = 10;
   int weight = 70;
-  int age = 30;
 
   @override
   void initState() {
@@ -116,7 +109,9 @@ class _InputPageState extends State<InputPage> {
                             ? kactiveCardColor
                             : kinactiveCardColor,
                         cardChild: IconContent(
-                            myicon: FontAwesomeIcons.user, text: 'MALE'),
+                          myicon: FontAwesomeIcons.user,
+                          text: 'MALE',
+                        ),
                       ),
                     ),
                   ),
@@ -132,7 +127,9 @@ class _InputPageState extends State<InputPage> {
                             ? kactiveCardColor
                             : kinactiveCardColor,
                         cardChild: IconContent(
-                            myicon: FontAwesomeIcons.female, text: 'FEMALE'),
+                          myicon: FontAwesomeIcons.personDress,
+                          text: 'FEMALE',
+                        ),
                       ),
                     ),
                   ),
@@ -257,151 +254,65 @@ class _InputPageState extends State<InputPage> {
             ),
           ),
           Expanded(
-            child: Row(
-              children: [
-                Expanded(
-                  child: ReusableBg(
-                    colour: kactiveCardColor,
-                    cardChild: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'WEIGHT',
-                          style: klabelTextStyle,
-                        ),
-                        Text(
-                          weight.toString(),
-                          style: kDigitTextStyle,
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            RoundIconButton(
-                              icon: FontAwesomeIcons.minus,
-                              onPressed: () {
-                                setState(() {
-                                  weight--;
-                                });
-                              },
-                            ),
-                            SizedBox(
-                              width: 15.0,
-                            ),
-                            RoundIconButton(
-                              icon: FontAwesomeIcons.plus,
-                              onPressed: () {
-                                setState(() {
-                                  weight++;
-                                });
-                              },
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+            child: ReusableBg(
+              colour: kactiveCardColor,
+              cardChild: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'WEIGHT',
+                    style: klabelTextStyle,
                   ),
-                ),
-                Expanded(
-                  child: ReusableBg(
-                    colour: kactiveCardColor,
-                    cardChild: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'AGE',
-                          style: klabelTextStyle,
-                        ),
-                        Text(
-                          age.toString(),
-                          style: kDigitTextStyle,
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            RoundIconButton(
-                              icon: FontAwesomeIcons.minus,
-                              onPressed: () {
-                                setState(() {
-                                  age--;
-                                });
-                              },
-                            ),
-                            SizedBox(width: 15.0),
-                            RoundIconButton(
-                              icon: FontAwesomeIcons.plus,
-                              onPressed: () {
-                                setState(() {
-                                  age++;
-                                });
-                              },
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+                  Text(
+                    weight.toString(),
+                    style: kDigitTextStyle,
                   ),
-                ),
-              ],
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      RoundIconButton(
+                        icon: FontAwesomeIcons.minus,
+                        onPressed: () {
+                          setState(() {
+                            weight--;
+                          });
+                        },
+                      ),
+                      SizedBox(width: 15.0),
+                      RoundIconButton(
+                        icon: FontAwesomeIcons.plus,
+                        onPressed: () {
+                          setState(() {
+                            weight++;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
           Padding(
             padding: EdgeInsets.all(15.0),
-            child: StatefulBuilder(
-              builder: (context, setState) {
-                bool isHovered = false;
-                return MouseRegion(
-                  onEnter: (_) => setState(() => isHovered = true),
-                  onExit: (_) => setState(() => isHovered = false),
-                  cursor: SystemMouseCursors.click,
-                  child: GestureDetector(
-                    onTap: () {
-                      int heightInCm = (feet * 30.48 + inches * 2.54).round();
-                      Calculate calc =
-                          Calculate(height: heightInCm, weight: weight);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ResultPage(
-                            bmi: calc.result(),
-                            resultText: calc.getText(),
-                            advise: calc.getAdvise(),
-                            textColor: calc.getTextColor(),
-                            height: heightInCm,
-                            weight: weight,
-                            bmiBmi: calc.getBMI(),
-                            normalWeightRange: calc.getNormalWeightRange(),
-                            profileImage: widget.profileImage,
-                          ),
-                        ),
-                      );
-                    },
-                    child: AnimatedContainer(
-                      duration: Duration(milliseconds: 200),
-                      padding: EdgeInsets.symmetric(vertical: 16.0),
-                      decoration: BoxDecoration(
-                        color:
-                            isHovered ? Color(0xFF2196F3) : Color(0xFF1B5E7E),
-                        borderRadius: BorderRadius.circular(10.0),
-                        boxShadow: isHovered
-                            ? [
-                                BoxShadow(
-                                  color: Color(0xFF2196F3).withOpacity(0.5),
-                                  blurRadius: 10,
-                                  spreadRadius: 2,
-                                )
-                              ]
-                            : [],
-                      ),
-                      child: Center(
-                        child: Text(
-                          'CALCULATE',
-                          style: TextStyle(
-                            fontSize: 20.0,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
+            child: ActionButton(
+              label: 'CALCULATE',
+              onTap: () {
+                final heightInCm = (feet * 30.48 + inches * 2.54).round();
+                final calc = Calculate(height: heightInCm, weight: weight);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ResultPage(
+                      bmi: calc.result(),
+                      resultText: calc.getText(),
+                      advise: calc.getAdvise(),
+                      textColor: calc.getTextColor(),
+                      height: heightInCm,
+                      weight: weight,
+                      bmiValue: calc.getBMI(),
+                      normalWeightRange: calc.getNormalWeightRange(),
+                      profileImage: widget.profileImage,
                     ),
                   ),
                 );
@@ -410,16 +321,6 @@ class _InputPageState extends State<InputPage> {
           ),
         ],
       ),
-
-      // floatingActionButton: FloatingActionButton(
-      //   onPressed: () {},
-      //   child: Icon(
-      //     Icons.favorite,
-      //     color: Colors.pink,
-      //     size: 23.0,
-      //   ),
-      //   backgroundColor: kactiveCardColor,
-      // ),
     );
   }
 }

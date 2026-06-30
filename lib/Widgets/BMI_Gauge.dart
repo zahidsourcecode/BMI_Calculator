@@ -3,46 +3,32 @@ import 'dart:math';
 
 class BMIGaugeWidget extends StatelessWidget {
   final double bmi;
-  final String status;
 
   const BMIGaugeWidget({
     required this.bmi,
-    required this.status,
   });
 
   @override
   Widget build(BuildContext context) {
     return CustomPaint(
       size: Size(350, 180),
-      painter: BMIGaugePainter(
-        bmi: bmi,
-        status: status,
-      ),
+      painter: BMIGaugePainter(bmi: bmi),
     );
   }
 }
 
 class BMIGaugePainter extends CustomPainter {
   final double bmi;
-  final String status;
 
-  BMIGaugePainter({
-    required this.bmi,
-    required this.status,
-  });
+  BMIGaugePainter({required this.bmi});
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height * 0.7);
     final radius = size.width / 2.5;
 
-    // Draw gauge background
     _drawGaugeBackground(canvas, center, radius);
-
-    // Draw needle
     _drawNeedle(canvas, center, radius);
-
-    // Draw center circle
     _drawCenterCircle(canvas, center);
   }
 
@@ -51,7 +37,6 @@ class BMIGaugePainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 30;
 
-    // Underweight range (red) - 0 to 18.5
     paint.color = Colors.redAccent;
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius),
@@ -61,7 +46,6 @@ class BMIGaugePainter extends CustomPainter {
       paint,
     );
 
-    // Normal range (green) - 18.5 to 25
     paint.color = Color(0xFF24D876);
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius),
@@ -71,7 +55,6 @@ class BMIGaugePainter extends CustomPainter {
       paint,
     );
 
-    // Overweight range (yellow) - 25 to 30
     paint.color = Colors.amber;
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius),
@@ -81,7 +64,6 @@ class BMIGaugePainter extends CustomPainter {
       paint,
     );
 
-    // Obesity range (red) - 30 to 40
     paint.color = Colors.deepOrangeAccent;
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius),
@@ -91,7 +73,6 @@ class BMIGaugePainter extends CustomPainter {
       paint,
     );
 
-    // Draw tick marks
     _drawTickMarks(canvas, center, radius);
   }
 
@@ -113,7 +94,6 @@ class BMIGaugePainter extends CustomPainter {
       );
       canvas.drawLine(start, end, paint);
 
-      // Draw text labels
       final textPainter = TextPainter(
         text: TextSpan(
           text: value.toString(),
@@ -137,7 +117,6 @@ class BMIGaugePainter extends CustomPainter {
   void _drawNeedle(Canvas canvas, Offset center, double radius) {
     final angle = -pi + (bmi.clamp(0, 40) / 40) * pi;
 
-    // Draw needle line
     final needlePaint = Paint()
       ..color = Colors.white
       ..strokeWidth = 3;
@@ -149,10 +128,7 @@ class BMIGaugePainter extends CustomPainter {
 
     canvas.drawLine(center, needleEnd, needlePaint);
 
-    // Draw filled triangle pointing AWAY from center (towards gauge)
     final arrowSize = 14.0;
-
-    // Base of triangle is behind the needle tip
     final baseCenter = Offset(
       needleEnd.dx - arrowSize * cos(angle),
       needleEnd.dy - arrowSize * sin(angle),
@@ -172,7 +148,7 @@ class BMIGaugePainter extends CustomPainter {
     );
 
     final trianglePath = Path()
-      ..moveTo(needleEnd.dx, needleEnd.dy) // tip
+      ..moveTo(needleEnd.dx, needleEnd.dy)
       ..lineTo(arrowPoint1.dx, arrowPoint1.dy)
       ..lineTo(arrowPoint2.dx, arrowPoint2.dy)
       ..close();
@@ -200,7 +176,7 @@ class BMIGaugePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return true;
+  bool shouldRepaint(covariant BMIGaugePainter oldDelegate) {
+    return oldDelegate.bmi != bmi;
   }
 }

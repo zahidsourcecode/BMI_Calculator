@@ -1,13 +1,13 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import '../constants.dart';
-import 'input_page.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import '../Components/Action_Button.dart';
+import 'input_page.dart';
 
 class LandingPage extends StatefulWidget {
   @override
-  _LandingPageState createState() => _LandingPageState();
+  State<LandingPage> createState() => _LandingPageState();
 }
 
 class _LandingPageState extends State<LandingPage> {
@@ -145,7 +145,6 @@ class _LandingPageState extends State<LandingPage> {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Welcome Section
               Column(
                 children: [
                   Text(
@@ -166,8 +165,6 @@ class _LandingPageState extends State<LandingPage> {
                   ),
                 ],
               ),
-
-              // Gender Selection
               Column(
                 children: [
                   Text(
@@ -248,7 +245,7 @@ class _LandingPageState extends State<LandingPage> {
                             child: Column(
                               children: [
                                 FaIcon(
-                                  FontAwesomeIcons.female,
+                                  FontAwesomeIcons.personDress,
                                   size: 50.0,
                                   color: Colors.white,
                                 ),
@@ -270,8 +267,6 @@ class _LandingPageState extends State<LandingPage> {
                   ),
                 ],
               ),
-
-              // Photo Section
               Column(
                 children: [
                   Text(
@@ -348,62 +343,20 @@ class _LandingPageState extends State<LandingPage> {
                               profileImage = null;
                             });
                           },
-                          child: Text('Skip'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Color(0xFF8D8E98),
                             padding: EdgeInsets.symmetric(vertical: 12.0),
                           ),
+                          child: Text('Skip'),
                         ),
                       ),
                     ],
                   ),
                 ],
               ),
-
-              // Continue Button
-              MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: StatefulBuilder(
-                  builder: (context, setState) {
-                    bool isHovered = false;
-                    return MouseRegion(
-                      onEnter: (_) => setState(() => isHovered = true),
-                      onExit: (_) => setState(() => isHovered = false),
-                      child: GestureDetector(
-                        onTap: _proceedToCalculator,
-                        child: AnimatedContainer(
-                          duration: Duration(milliseconds: 200),
-                          padding: EdgeInsets.symmetric(vertical: 16.0),
-                          decoration: BoxDecoration(
-                            color: isHovered
-                                ? Color(0xFF2196F3)
-                                : Color(0xFF1B5E7E),
-                            borderRadius: BorderRadius.circular(10.0),
-                            boxShadow: isHovered
-                                ? [
-                                    BoxShadow(
-                                      color: Color(0xFF2196F3).withOpacity(0.5),
-                                      blurRadius: 10,
-                                      spreadRadius: 2,
-                                    )
-                                  ]
-                                : [],
-                          ),
-                          child: Center(
-                            child: Text(
-                              'CONTINUE',
-                              style: TextStyle(
-                                fontSize: 20.0,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
+              ActionButton(
+                label: 'CONTINUE',
+                onTap: _proceedToCalculator,
               ),
             ],
           ),

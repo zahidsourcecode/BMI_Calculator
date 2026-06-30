@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'dart:io';
-import '../constants.dart';
 import '../Services/results_storage.dart';
 import 'Results_Page.dart';
 
@@ -82,8 +80,6 @@ class _SavedResultsPageState extends State<SavedResultsPage> {
               return GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onTap: () {
-                  debugPrint('Tapped on result: ${result.bmi}');
-                  // Navigate to ResultPage with the saved result data
                   File? profileImage;
                   if (result.profileImagePath.isNotEmpty &&
                       File(result.profileImagePath).existsSync()) {
@@ -99,7 +95,7 @@ class _SavedResultsPageState extends State<SavedResultsPage> {
                         textColor: _getColorForStatus(result.status),
                         height: result.height,
                         weight: result.weight,
-                        bmiBmi: result.bmiBmi,
+                        bmiValue: result.bmiBmi,
                         normalWeightRange: result.normalWeightRange,
                         isSavedResult: true,
                         profileImage: profileImage,
@@ -186,10 +182,7 @@ class _SavedResultsPageState extends State<SavedResultsPage> {
                       right: 8,
                       child: GestureDetector(
                         behavior: HitTestBehavior.opaque,
-                        onTap: () {
-                          debugPrint('Delete button tapped');
-                          _showDeleteDialog(context, result);
-                        },
+                        onTap: () => _showDeleteDialog(context, result),
                         child: Container(
                           padding: EdgeInsets.all(4),
                           decoration: BoxDecoration(
