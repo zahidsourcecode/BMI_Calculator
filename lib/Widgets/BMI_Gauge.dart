@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
+import '../constants.dart';
 
 class BMIGaugeWidget extends StatelessWidget {
   final double bmi;
@@ -10,9 +11,21 @@ class BMIGaugeWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CustomPaint(
-      size: Size(350, 180),
-      painter: BMIGaugePainter(bmi: bmi),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth.isFinite
+            ? constraints.maxWidth.clamp(220.0, 360.0)
+            : 300.0;
+        final height = width * 0.52;
+
+        return SizedBox(
+          width: width,
+          height: height,
+          child: CustomPaint(
+            painter: BMIGaugePainter(bmi: bmi),
+          ),
+        );
+      },
     );
   }
 }
@@ -37,7 +50,7 @@ class BMIGaugePainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 30;
 
-    paint.color = Colors.redAccent;
+    paint.color = const Color(0xFFF87171);
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius),
       -pi,
@@ -46,7 +59,7 @@ class BMIGaugePainter extends CustomPainter {
       paint,
     );
 
-    paint.color = Color(0xFF24D876);
+    paint.color = AppColors.primaryDark;
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius),
       -pi + (18.5 / 40) * pi,
@@ -55,7 +68,7 @@ class BMIGaugePainter extends CustomPainter {
       paint,
     );
 
-    paint.color = Colors.amber;
+    paint.color = const Color(0xFFFBBF24);
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius),
       -pi + (25 / 40) * pi,
@@ -64,7 +77,7 @@ class BMIGaugePainter extends CustomPainter {
       paint,
     );
 
-    paint.color = Colors.deepOrangeAccent;
+    paint.color = const Color(0xFFF87171);
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius),
       -pi + (30 / 40) * pi,
@@ -78,7 +91,7 @@ class BMIGaugePainter extends CustomPainter {
 
   void _drawTickMarks(Canvas canvas, Offset center, double radius) {
     final paint = Paint()
-      ..color = Colors.white
+      ..color = AppColors.primaryDark
       ..strokeWidth = 2;
 
     final values = [0, 10, 20, 30, 40];
@@ -98,7 +111,7 @@ class BMIGaugePainter extends CustomPainter {
         text: TextSpan(
           text: value.toString(),
           style: TextStyle(
-            color: Colors.white,
+            color: AppColors.textPrimary,
             fontSize: 10,
           ),
         ),
@@ -118,7 +131,7 @@ class BMIGaugePainter extends CustomPainter {
     final angle = -pi + (bmi.clamp(0, 40) / 40) * pi;
 
     final needlePaint = Paint()
-      ..color = Colors.white
+      ..color = AppColors.textPrimary
       ..strokeWidth = 3;
 
     final needleEnd = Offset(
@@ -154,7 +167,7 @@ class BMIGaugePainter extends CustomPainter {
       ..close();
 
     final trianglePaint = Paint()
-      ..color = Colors.white
+      ..color = AppColors.textPrimary
       ..style = PaintingStyle.fill;
 
     canvas.drawPath(trianglePath, trianglePaint);
@@ -162,13 +175,13 @@ class BMIGaugePainter extends CustomPainter {
 
   void _drawCenterCircle(Canvas canvas, Offset center) {
     final paint = Paint()
-      ..color = Color(0xFF0A2F51)
+      ..color = AppColors.backgroundTop
       ..style = PaintingStyle.fill;
 
     canvas.drawCircle(center, 12, paint);
 
     final borderPaint = Paint()
-      ..color = Colors.white
+      ..color = AppColors.textPrimary
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
 

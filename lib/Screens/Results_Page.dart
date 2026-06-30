@@ -1,9 +1,11 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import '../Components/Action_Button.dart';
+import 'package:flutter/services.dart';
 import '../Services/results_storage.dart';
 import '../Widgets/BMI_Gauge.dart';
+import '../constants.dart';
+import '../widgets/app_ui.dart';
 import 'input_page.dart';
 
 class ResultPage extends StatefulWidget {
@@ -17,8 +19,10 @@ class ResultPage extends StatefulWidget {
   final String normalWeightRange;
   final bool isSavedResult;
   final File? profileImage;
+  final String name;
 
   const ResultPage({
+    Key? key,
     required this.textColor,
     required this.resultText,
     required this.bmi,
@@ -29,147 +33,237 @@ class ResultPage extends StatefulWidget {
     required this.normalWeightRange,
     this.isSavedResult = false,
     this.profileImage,
-  });
+    this.name = '',
+  }) : super(key: key);
 
   @override
   State<ResultPage> createState() => _ResultPageState();
 }
 
-class _ResultPageState extends State<ResultPage> {
+class _ResultPageState extends State<ResultPage> with SingleTickerProviderStateMixin {
   late bool _resultSaved = widget.isSavedResult;
+  bool _showSavedMessage = false;
+  late final AnimationController _popupShakeController;
+  late final Animation<double> _popupShakeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _popupShakeController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 1),
+    );
+    _popupShakeAnimation = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 0, end: -8), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: -8, end: 8), weight: 2),
+      TweenSequenceItem(tween: Tween(begin: 8, end: -8), weight: 2),
+      TweenSequenceItem(tween: Tween(begin: -8, end: 8), weight: 2),
+      TweenSequenceItem(tween: Tween(begin: 8, end: -6), weight: 2),
+      TweenSequenceItem(tween: Tween(begin: -6, end: 6), weight: 2),
+      TweenSequenceItem(tween: Tween(begin: 6, end: 0), weight: 1),
+    ]).animate(CurvedAnimation(parent: _popupShakeController, curve: Curves.easeInOut));
+  }
+
+  @override
+  void dispose() {
+    _popupShakeController.dispose();
+    super.dispose();
+  }
+
+  Color get _statusColor {
+    if (widget.resultText == 'NORMAL') return AppColors.success;
+    if (widget.resultText == 'UNDERWEIGHT') return AppColors.warning;
+    return AppColors.danger;
+  }
+
+  void _showSavedToHistoryPopup() {
+    HapticFeedback.lightImpact();
+    setState(() => _showSavedMessage = true);
+    _popupShakeController.forward(from: 0);
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) {
+        setState(() => _showSavedMessage = false);
+        _popupShakeController.reset();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Color(0xFF0A2F51),
-      appBar: AppBar(
-        title: Center(
-          child: Text('BMI CALCULATOR'),
-        ),
+    final padding = AppSpacing.page(context);
+
+    return AppScaffold(
+      title: 'Your Result',
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
+        onPressed: () => Navigator.pop(context),
       ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+      actions: [
+        IconButton(
+          tooltip: 'History',
+          icon: const Icon(Icons.history_rounded, color: AppColors.textPrimary),
+          onPressed: () => openHistory(context),
+        ),
+        IconButton(
+          tooltip: 'Home',
+          icon: const Icon(Icons.home_rounded, color: AppColors.textPrimary),
+          onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
+        ),
+        const SizedBox(width: 4),
+      ],
+      body: Stack(
+        clipBehavior: Clip.none,
         children: [
-          Expanded(
-            child: Container(
-              padding: EdgeInsets.all(15.0),
-              alignment: Alignment.center,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'BMI = ${widget.bmi} kg/m²',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  Text(
-                    '(${widget.resultText})',
-                    style: TextStyle(
-                      color: widget.textColor,
-                      fontSize: 18.0,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
+          SingleChildScrollView(
+        padding: EdgeInsets.fromLTRB(padding, 4, padding, padding),
+        child: Column(
+          children: [
+            if (widget.profileImage != null) ...[
+              CircleAvatar(radius: 34, backgroundImage: FileImage(widget.profileImage!)),
+              const SizedBox(height: 16),
+            ],
+            if (widget.name.isNotEmpty) ...[
+              Text(
+                widget.name,
+                style: AppText.headline(context),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+            ],
+            Text(
+              widget.bmi,
+              style: AppText.display(context).copyWith(
+                fontSize: AppText.scale(context, 52),
+                color: AppColors.textPrimary,
               ),
             ),
-          ),
-          Expanded(
-            flex: 3,
-            child: Center(
-              child: BMIGaugeWidget(bmi: widget.bmiValue),
+            Text(
+              'kg / m²',
+              style: AppText.body(context).copyWith(color: AppColors.textPrimary),
             ),
-          ),
-          Expanded(
-            flex: 4,
-            child: Container(
-              padding: EdgeInsets.all(20.0),
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildInfoRow(
-                      'Healthy BMI range:',
-                      '18.5 - 25 kg/m²',
-                    ),
-                    SizedBox(height: 10.0),
-                    _buildInfoRow(
-                      'Healthy weight for the height:',
-                      widget.normalWeightRange,
-                    ),
-                    SizedBox(height: 10.0),
-                    _buildInfoRow(
-                      'Lose ${_amountToLose().toStringAsFixed(1)} kg',
-                      'to reach a BMI of 25 kg/m².',
-                    ),
-                    SizedBox(height: 10.0),
-                    _buildInfoRow(
-                      'BMI Prime:',
-                      (widget.bmiValue / 25).toStringAsFixed(2),
-                    ),
-                    SizedBox(height: 10.0),
-                    _buildInfoRow(
-                      'Ponderal Index:',
-                      '${_ponderalIndex().toStringAsFixed(1)} kg/m³',
-                    ),
-                    SizedBox(height: 15.0),
-                    Center(
-                      child: ActionButton(
-                        label: 'SAVE RESULT',
-                        width: 200.0,
-                        height: 56.0,
-                        enabled: !_resultSaved,
-                        onTap: _saveResult,
-                      ),
-                    ),
-                  ],
+            const SizedBox(height: 12),
+            StatusBadge(
+              label: widget.resultText,
+              color: _statusColor,
+              backgroundColor: AppColors.surface,
+            ),
+            const SizedBox(height: 36),
+            BMIGaugeWidget(bmi: widget.bmiValue),
+            const SizedBox(height: 24),
+            AppCard(
+              child: Text(
+                widget.advise,
+                textAlign: TextAlign.center,
+                style: AppText.cardBody(context).copyWith(
+                  color: AppColors.textOnCard,
+                  fontSize: AppText.scale(context, 16),
                 ),
               ),
             ),
-          ),
-          Padding(
-            padding: EdgeInsets.all(15.0),
-            child: ActionButton(
-              label: 'RE-CALCULATE',
-              onTap: () {
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => InputPage(
-                      profileImage: widget.profileImage,
+            AppCard(
+              child: Column(
+                children: [
+                  _statRow('Healthy BMI range', '18.5 – 25'),
+                  _divider(),
+                  _statRow('Healthy weight', widget.normalWeightRange),
+                  _divider(),
+                  _statRow(
+                    'To reach BMI 25',
+                    widget.bmiValue > 25 ? 'Lose ${_amountToLose().toStringAsFixed(1)} kg' : 'On track',
+                  ),
+                  _divider(),
+                  _statRow('BMI Prime', (widget.bmiValue / 25).toStringAsFixed(2)),
+                  _divider(),
+                  _statRow('Ponderal Index', '${_ponderalIndex().toStringAsFixed(1)} kg/m³'),
+                ],
+              ),
+            ),
+            PrimaryButton(
+              label: _resultSaved ? 'Saved to history' : 'Save to history',
+              icon: _resultSaved ? Icons.check_rounded : Icons.bookmark_add_outlined,
+              enabled: !_resultSaved,
+              backgroundColor: AppColors.primary,
+              disabledBackgroundColor: AppColors.primary,
+              borderColor: AppColors.textPrimary,
+              onTap: _saveResult,
+            ),
+            const SizedBox(height: 12),
+            SecondaryButton(
+              label: 'Calculate again',
+              icon: Icons.refresh_rounded,
+              onTap: () => Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => InputPage(
+                    profileImage: widget.profileImage,
+                    initialName: widget.name,
+                  ),
+                ),
+                (route) => route.isFirst,
+              ),
+            ),
+          ],
+        ),
+      ),
+          if (_showSavedMessage)
+            Positioned(
+              top: 0,
+              left: padding,
+              right: padding,
+              child: AnimatedBuilder(
+                animation: _popupShakeAnimation,
+                builder: (context, child) {
+                  return Transform.translate(
+                    offset: Offset(_popupShakeAnimation.value, 0),
+                    child: child,
+                  );
+                },
+                child: Material(
+                  elevation: 8,
+                  shadowColor: Colors.black26,
+                  borderRadius: BorderRadius.circular(12),
+                  color: AppColors.primary,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppColors.textPrimary.withValues(alpha: 0.7),
+                      ),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    child: Text(
+                      'Saved to history',
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: AppText.scale(context, 15),
+                      ),
+                      textAlign: TextAlign.center,
                     ),
                   ),
-                  (route) => route.isFirst,
-                );
-              },
+                ),
+              ),
             ),
-          ),
         ],
       ),
     );
   }
 
-  Widget _buildInfoRow(String label, String value) {
+  Widget _divider() => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Divider(color: AppColors.border.withValues(alpha: 0.5), height: 1),
+      );
+
+  Widget _statRow(String label, String value) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            color: Color(0xFF8D8E98),
-            fontSize: 14,
-          ),
-        ),
+        Expanded(child: Text(label, style: AppText.cardBody(context))),
         Text(
           value,
           style: TextStyle(
-            color: Colors.white,
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
+            color: AppColors.textOnCard,
+            fontWeight: FontWeight.w600,
+            fontSize: AppText.scale(context, 14),
           ),
         ),
       ],
@@ -177,44 +271,35 @@ class _ResultPageState extends State<ResultPage> {
   }
 
   double _amountToLose() {
-    final idealWeightKg =
-        25.0 * (widget.height / 100) * (widget.height / 100);
-    final diffKg = widget.weight - idealWeightKg;
-
-    return diffKg > 0 ? diffKg : 0;
+    final ideal = 25.0 * (widget.height / 100) * (widget.height / 100);
+    final diff = widget.weight - ideal;
+    return diff > 0 ? diff : 0;
   }
 
   double _ponderalIndex() {
-    final heightInMeters = widget.height / 100;
-    return widget.weight / (heightInMeters * heightInMeters * heightInMeters);
+    final h = widget.height / 100;
+    return widget.weight / (h * h * h);
   }
 
-  void _saveResult() async {
-    final result = BMIResult(
-      bmi: widget.bmi,
-      status: widget.resultText,
-      normalWeightRange: widget.normalWeightRange,
-      savedDate: DateTime.now(),
-      height: widget.height,
-      weight: widget.weight,
-      advice: widget.advise,
-      bmiBmi: widget.bmiValue,
-      profileImagePath: widget.profileImage?.path ?? '',
+  Future<void> _saveResult() async {
+    await ResultsStorage.saveResult(
+      BMIResult(
+        id: DateTime.now().microsecondsSinceEpoch.toString(),
+        name: widget.name,
+        bmi: widget.bmi,
+        status: widget.resultText,
+        normalWeightRange: widget.normalWeightRange,
+        savedDate: DateTime.now(),
+        height: widget.height,
+        weight: widget.weight,
+        advice: widget.advise,
+        bmiBmi: widget.bmiValue,
+        profileImagePath: widget.profileImage?.path ?? '',
+      ),
     );
 
-    await ResultsStorage.saveResult(result);
-
-    if (mounted) {
-      setState(() {
-        _resultSaved = true;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Result saved successfully!'),
-          duration: Duration(seconds: 2),
-          backgroundColor: Color(0xFF24D876),
-        ),
-      );
-    }
+    if (!mounted) return;
+    setState(() => _resultSaved = true);
+    _showSavedToHistoryPopup();
   }
 }

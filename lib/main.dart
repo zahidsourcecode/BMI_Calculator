@@ -1,17 +1,23 @@
 import 'package:flutter/material.dart';
-import 'Screens/landing_page.dart';
+import 'Screens/welcome_page.dart';
+import 'Screens/SavedResults_Page.dart';
+import 'constants.dart';
 
-void main() => runApp(MyApp());
+void main() => runApp(const MyApp());
 
 class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      theme: ThemeData.dark().copyWith(
-        primaryColor: Color(0xFF0A0E21),
-        scaffoldBackgroundColor: Color(0xFF0A0E21),
-      ),
-      home: LandingPage(),
+      debugShowCheckedModeBanner: false,
+      title: 'Your BMI',
+      theme: buildAppTheme(),
+      home: const WelcomePage(),
+      routes: {
+        '/history': (context) => const SavedResultsPage(),
+      },
     );
   }
 }

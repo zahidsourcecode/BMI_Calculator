@@ -2,6 +2,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
 class BMIResult {
+  final String id;
+  final String name;
   final String bmi;
   final String status;
   final String normalWeightRange;
@@ -13,6 +15,8 @@ class BMIResult {
   final String profileImagePath;
 
   BMIResult({
+    String? id,
+    this.name = '',
     required this.bmi,
     required this.status,
     required this.normalWeightRange,
@@ -22,10 +26,12 @@ class BMIResult {
     this.advice = '',
     this.bmiBmi = 0.0,
     this.profileImagePath = '',
-  });
+  }) : id = id ?? savedDate.microsecondsSinceEpoch.toString();
 
   Map<String, dynamic> toMap() {
     return {
+      'id': id,
+      'name': name,
       'bmi': bmi,
       'status': status,
       'normalWeightRange': normalWeightRange,
@@ -39,12 +45,17 @@ class BMIResult {
   }
 
   factory BMIResult.fromMap(Map<String, dynamic> map) {
+    final savedDate = DateTime.parse(
+      map['savedDate'] ?? DateTime.now().toIso8601String(),
+    );
+
     return BMIResult(
+      id: map['id'] as String?,
+      name: map['name']?.toString() ?? '',
       bmi: map['bmi'] ?? '',
       status: map['status'] ?? '',
       normalWeightRange: map['normalWeightRange'] ?? '',
-      savedDate:
-          DateTime.parse(map['savedDate'] ?? DateTime.now().toIso8601String()),
+      savedDate: savedDate,
       height: map['height'] ?? 0,
       weight: map['weight'] ?? 0,
       advice: map['advice'] ?? '',
@@ -92,13 +103,24 @@ class ResultsStorage {
     final prefs = await SharedPreferences.getInstance();
     final results = await getResults();
 
-    // Remove the result that matches the BMI, status, and date
-    results.removeWhere((r) =>
-        r.bmi == result.bmi &&
-        r.status == result.status &&
-        r.savedDate == result.savedDate);
+    final index = results.indexWhere((r) => _matches(r, result));
+    if (index == -1) return;
+
+    results.removeAt(index);
 
     final jsonList = results.map((r) => jsonEncode(r.toMap())).toList();
     await prefs.setStringList(_key, jsonList);
+  }
+
+  static bool matches(BMIResult a, BMIResult b) => _matches(a, b);
+
+  static bool _matches(BMIResult a, BMIResult b) {
+    if (a.id.isNotEmpty && b.id.isNotEmpty && a.id == b.id) {
+      return true;
+    }
+
+    return a.bmi == b.bmi &&
+        a.status == b.status &&
+        a.savedDate.millisecondsSinceEpoch == b.savedDate.millisecondsSinceEpoch;
   }
 }

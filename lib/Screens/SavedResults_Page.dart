@@ -1,273 +1,313 @@
-import 'package:flutter/material.dart';
 import 'dart:io';
+
+import 'package:flutter/material.dart';
 import '../Services/results_storage.dart';
+import '../constants.dart';
+import '../widgets/app_ui.dart';
 import 'Results_Page.dart';
 
 class SavedResultsPage extends StatefulWidget {
+  const SavedResultsPage({Key? key}) : super(key: key);
+
   @override
   State<SavedResultsPage> createState() => _SavedResultsPageState();
 }
 
 class _SavedResultsPageState extends State<SavedResultsPage> {
-  late Future<List<BMIResult>> _resultsFuture;
+  List<BMIResult> _results = [];
+  bool _loading = true;
 
   @override
   void initState() {
     super.initState();
-    _resultsFuture = ResultsStorage.getResults();
+    _loadResults();
+  }
+
+  Future<void> _loadResults() async {
+    final results = await ResultsStorage.getResults();
+    if (!mounted) return;
+    setState(() {
+      _results = results;
+      _loading = false;
+    });
+  }
+
+  Future<void> _deleteResult(BMIResult result) async {
+    final previous = List<BMIResult>.from(_results);
+    setState(() {
+      _results.removeWhere((r) => ResultsStorage.matches(r, result));
+    });
+
+    try {
+      await ResultsStorage.deleteResult(result);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _results = previous);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not delete. Please try again.')),
+      );
+    }
+  }
+
+  Future<void> _clearAll() async {
+    final previous = List<BMIResult>.from(_results);
+    setState(() => _results = []);
+
+    try {
+      await ResultsStorage.clearResults();
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _results = previous);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not clear history. Please try again.')),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Color(0xFF0A2F51),
-      appBar: AppBar(
-        title: Text('Saved Results'),
-        centerTitle: true,
-        actions: [
+    final padding = AppSpacing.page(context);
+
+    return AppScaffold(
+      title: 'History',
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
+        onPressed: () => Navigator.pop(context),
+      ),
+      actions: [
+        if (_results.isNotEmpty)
           IconButton(
-            icon: Icon(Icons.delete_sweep),
+            tooltip: 'Clear all',
+            icon: const Icon(Icons.delete_sweep_outlined, color: AppColors.textPrimary),
+            onPressed: _showClearDialog,
+          ),
+        IconButton(
+          tooltip: 'Home',
+          icon: const Icon(Icons.home_rounded, color: AppColors.textPrimary),
+          onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
+        ),
+        const SizedBox(width: 4),
+      ],
+      body: _loading
+          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+          : _results.isEmpty
+              ? _buildEmptyState(padding)
+              : _buildList(padding),
+    );
+  }
+
+  Widget _buildEmptyState(double padding) {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.all(padding * 2),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.history_rounded, size: 72, color: AppColors.textMuted.withValues(alpha: 0.5)),
+            const SizedBox(height: 20),
+            Text('No history yet', style: AppText.headline(context)),
+            const SizedBox(height: 8),
+            Text(
+              'Save a BMI result to see it here.',
+              style: AppText.body(context),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildList(double padding) {
+    final items = [..._results.reversed];
+
+    return ListView.separated(
+      padding: EdgeInsets.all(padding),
+      itemCount: items.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      itemBuilder: (context, index) {
+        final result = items[index];
+        return Dismissible(
+          key: ValueKey(result.id),
+          direction: DismissDirection.endToStart,
+          background: Container(
+            alignment: Alignment.centerRight,
+            padding: const EdgeInsets.only(right: 20),
+            decoration: BoxDecoration(
+              color: AppColors.danger.withValues(alpha: 0.85),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: const Icon(Icons.delete_outline, color: Colors.white),
+          ),
+          onDismissed: (_) => _deleteResult(result),
+          child: _HistoryTile(
+            result: result,
+            onTap: () => _openResult(result),
+            onDelete: () => _deleteResult(result),
+          ),
+        );
+      },
+    );
+  }
+
+  void _openResult(BMIResult result) {
+    File? profileImage;
+    if (result.profileImagePath.isNotEmpty && File(result.profileImagePath).existsSync()) {
+      profileImage = File(result.profileImagePath);
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ResultPage(
+          bmi: result.bmi,
+          name: result.name,
+          resultText: result.status,
+          advise: result.advice,
+          textColor: _statusColor(result.status),
+          height: result.height,
+          weight: result.weight,
+          bmiValue: result.bmiBmi,
+          normalWeightRange: result.normalWeightRange,
+          isSavedResult: true,
+          profileImage: profileImage,
+        ),
+      ),
+    );
+  }
+
+  Color _statusColor(String status) {
+    if (status == 'NORMAL') return AppColors.success;
+    if (status == 'UNDERWEIGHT') return AppColors.warning;
+    return AppColors.danger;
+  }
+
+  void _showClearDialog() {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Clear all history?'),
+        content: Text('This cannot be undone.', style: AppText.cardBody(context)),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel')),
+          TextButton(
             onPressed: () {
-              _showClearDialog(context);
+              Navigator.pop(dialogContext);
+              _clearAll();
             },
+            child: const Text('Clear all', style: TextStyle(color: AppColors.danger)),
           ),
         ],
       ),
-      body: FutureBuilder<List<BMIResult>>(
-        future: _resultsFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          }
+    );
+  }
+}
 
-          if (snapshot.hasError) {
-            return Center(child: Text('Error loading results'));
-          }
+class _HistoryTile extends StatelessWidget {
+  const _HistoryTile({
+    required this.result,
+    required this.onTap,
+    required this.onDelete,
+  });
 
-          final results = snapshot.data ?? [];
+  final BMIResult result;
+  final VoidCallback onTap;
+  final VoidCallback onDelete;
 
-          if (results.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.history, size: 60, color: Color(0xFF8D8E98)),
-                  SizedBox(height: 20),
-                  Text(
-                    'No saved results yet',
-                    style: TextStyle(
-                      color: Color(0xFF8D8E98),
-                      fontSize: 18,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }
+  @override
+  Widget build(BuildContext context) {
+    final color = result.status == 'NORMAL'
+        ? AppColors.success
+        : result.status == 'UNDERWEIGHT'
+            ? AppColors.warning
+            : AppColors.danger;
+    final hasImage = result.profileImagePath.isNotEmpty && File(result.profileImagePath).existsSync();
 
-          return GridView.builder(
-            padding: EdgeInsets.all(12.0),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 12.0,
-              mainAxisSpacing: 12.0,
-              childAspectRatio: 1,
-            ),
-            itemCount: results.length,
-            itemBuilder: (context, index) {
-              final result =
-                  results[results.length - 1 - index]; // Show newest first
-              return GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () {
-                  File? profileImage;
-                  if (result.profileImagePath.isNotEmpty &&
-                      File(result.profileImagePath).existsSync()) {
-                    profileImage = File(result.profileImagePath);
-                  }
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ResultPage(
-                        bmi: result.bmi,
-                        resultText: result.status,
-                        advise: result.advice,
-                        textColor: _getColorForStatus(result.status),
-                        height: result.height,
-                        weight: result.weight,
-                        bmiValue: result.bmiBmi,
-                        normalWeightRange: result.normalWeightRange,
-                        isSavedResult: true,
-                        profileImage: profileImage,
-                      ),
-                    ),
-                  );
-                },
-                child: Stack(
+    return AppCard(
+      margin: EdgeInsets.zero,
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          Expanded(
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: onTap,
+                borderRadius: BorderRadius.circular(12),
+                child: Row(
                   children: [
-                    Card(
-                      color: Color(0xFF1B5E7E),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15.0),
+                    if (hasImage) ...[
+                      CircleAvatar(radius: 24, backgroundImage: FileImage(File(result.profileImagePath))),
+                      const SizedBox(width: 14),
+                    ] else
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: color.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Icon(Icons.monitor_weight_outlined, color: color),
                       ),
-                      child: Padding(
-                        padding: EdgeInsets.all(12.0),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (result.profileImagePath.isNotEmpty &&
-                                File(result.profileImagePath).existsSync())
-                              Padding(
-                                padding: EdgeInsets.only(bottom: 8.0),
-                                child: Container(
-                                  width: 40.0,
-                                  height: 40.0,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    image: DecorationImage(
-                                      image: FileImage(
-                                          File(result.profileImagePath)),
-                                      fit: BoxFit.cover,
-                                    ),
-                                    border: Border.all(
-                                      color: Colors.white,
-                                      width: 1.5,
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (result.name.isNotEmpty) ...[
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.person_outline_rounded,
+                                  size: 18,
+                                  color: AppColors.primaryDark,
+                                ),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    result.name,
+                                    style: AppText.cardHeadline(context).copyWith(
+                                      fontSize: AppText.scale(context, 18),
                                     ),
                                   ),
                                 ),
-                              ),
-                            Text(
-                              result.bmi,
-                              style: TextStyle(
-                                fontSize: 32,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
+                              ],
                             ),
-                            SizedBox(height: 4.0),
-                            Text(
-                              result.status,
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                color: result.status == 'NORMAL'
-                                    ? Color(0xFF24D876)
-                                    : Colors.deepOrangeAccent,
-                              ),
-                            ),
-                            SizedBox(height: 4.0),
-                            Text(
-                              result.normalWeightRange,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: Color(0xFF8D8E98),
-                              ),
-                            ),
-                            SizedBox(height: 4.0),
-                            Text(
-                              _formatDate(result.savedDate),
-                              style: TextStyle(
-                                fontSize: 9,
-                                color: Color(0xFF8D8E98),
-                              ),
-                            ),
+                            const SizedBox(height: 6),
                           ],
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: GestureDetector(
-                        behavior: HitTestBehavior.opaque,
-                        onTap: () => _showDeleteDialog(context, result),
-                        child: Container(
-                          padding: EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            color: Colors.deepOrangeAccent,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            Icons.close,
-                            color: Colors.white,
-                            size: 18,
-                          ),
-                        ),
+                          Text('BMI ${result.bmi}', style: AppText.cardHeadline(context)),
+                          const SizedBox(height: 4),
+                          StatusBadge(label: result.status, color: color),
+                          const SizedBox(height: 6),
+                          Text(_formatDate(result.savedDate), style: AppText.cardLabel(context)),
+                        ],
                       ),
                     ),
                   ],
                 ),
-              );
-            },
-          );
-        },
+              ),
+            ),
+          ),
+          IconButton(
+            tooltip: 'Delete',
+            icon: const Icon(Icons.close_rounded, size: 20),
+            color: AppColors.textOnCardMuted,
+            onPressed: onDelete,
+          ),
+        ],
       ),
     );
   }
 
   String _formatDate(DateTime date) {
-    return '${date.day}/${date.month}/${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
-  }
+    const months = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December',
+    ];
+    final hour = date.hour % 12 == 0 ? 12 : date.hour % 12;
+    final minute = date.minute.toString().padLeft(2, '0');
+    final period = date.hour < 12 ? 'am' : 'pm';
 
-  Color _getColorForStatus(String status) {
-    if (status == 'NORMAL') {
-      return Color(0xFF24D876);
-    } else {
-      return Colors.deepOrangeAccent;
-    }
-  }
-
-  void _showDeleteDialog(BuildContext context, BMIResult result) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Delete this result?'),
-        content: Text('BMI ${result.bmi} - ${result.status}'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () async {
-              await ResultsStorage.deleteResult(result);
-              Navigator.pop(context);
-              setState(() {
-                _resultsFuture = ResultsStorage.getResults();
-              });
-            },
-            child: Text('Delete', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showClearDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Clear all results?'),
-        content: Text('This action cannot be undone.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () async {
-              await ResultsStorage.clearResults();
-              Navigator.pop(context);
-              setState(() {
-                _resultsFuture = ResultsStorage.getResults();
-              });
-            },
-            child: Text('Delete', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
+    return '${date.day} ${months[date.month - 1]} ${date.year} $hour:$minute $period';
   }
 }
