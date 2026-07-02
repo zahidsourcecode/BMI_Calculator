@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 import '../constants.dart';
-import '../theme/app_palette.dart';
 
 class BMIGaugeWidget extends StatelessWidget {
   const BMIGaugeWidget({required this.bmi});

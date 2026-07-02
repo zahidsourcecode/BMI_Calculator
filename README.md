@@ -6,12 +6,12 @@ A Flutter app to calculate BMI, view results on a gauge, and save history locall
 
 | Tool | Version |
 |------|---------|
-| Flutter | 3.41.7 |
-| Dart | 3.11.5 |
+| Flutter | 3.44.4 |
+| Dart | 3.12.2 |
 | Java | 17 |
-| Gradle | 8.14 |
-| Android Gradle Plugin | 8.11.1 |
-| Kotlin | 2.2.20 |
+| Gradle | 9.1.0 |
+| Android Gradle Plugin | 9.0.1 |
+| Kotlin | 2.3.20 |
 
 ## Getting Started
 

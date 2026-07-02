@@ -1,12 +1,11 @@
 import 'dart:io';
 
 import 'package:image/image.dart' as img;
-import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 
 class ImageHelper {
   /// Bakes EXIF orientation into pixels so photos display upright and natural.
-  static Future<File> normalizeForDisplay(File source, ImageSource imageSource) async {
+  static Future<File> normalizeForDisplay(File source) async {
     final bytes = await source.readAsBytes();
     final decoded = img.decodeImage(bytes);
 
