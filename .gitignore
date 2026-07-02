@@ -1,50 +1,79 @@
-# Miscellaneous
+```gitignore
+# ------------------------------------------------------------
+# OS & Miscellaneous
+# ------------------------------------------------------------
+.DS_Store
 *.class
 *.log
 *.pyc
 *.swp
-.DS_Store
 .atom/
 .buildlog/
 .history
 .svn/
 
-# IntelliJ related
+# ------------------------------------------------------------
+# IDEs
+# ------------------------------------------------------------
+.idea/
 *.iml
 *.ipr
 *.iws
-.idea/
 
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
+# VS Code
+# Uncomment the following line if you don't want to track VS Code settings.
+# .vscode/
 
-# Flutter/Dart/Pub related
-**/doc/api/
-**/ios/Flutter/.last_build_id
+# ------------------------------------------------------------
+# Flutter / Dart
+# ------------------------------------------------------------
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
 .packages
-.pub-cache/
 .pub/
-/build/
+.pub-cache/
+build/
 android/.gradle/
+**/doc/api/
+**/ios/Flutter/.last_build_id
 
-# Web related
+# Generated files
 lib/generated_plugin_registrant.dart
 
-# Symbolication related
+# Symbolication
 app.*.symbols
 
-# Obfuscation related
+# Obfuscation
 app.*.map.json
 
-# Android Studio will place build artifacts here
-/android/app/debug
-/android/app/profile
-/android/app/release
-.fvm/fvm_config.json
-/.fvm
+# Android build outputs
+/android/app/debug/
+/android/app/profile/
+/android/app/release/
+
+# FVM
+.fvm/
 .fvm/flutter_sdk
+.fvm/fvm_config.json
+
+# ------------------------------------------------------------
+# Node.js (Backend)
+# ------------------------------------------------------------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment files
+.env
+.env.*
+
+# Build outputs
+dist/
+coverage/
+
+# Optional cache
+.cache/
+```
