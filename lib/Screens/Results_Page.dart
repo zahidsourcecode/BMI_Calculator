@@ -22,7 +22,7 @@ class ResultPage extends StatefulWidget {
   final String age;
 
   const ResultPage({
-    Key? key,
+    super.key,
     required this.resultText,
     required this.bmi,
     required this.advise,
@@ -34,7 +34,7 @@ class ResultPage extends StatefulWidget {
     this.profileImage,
     this.name = '',
     this.age = '',
-  }) : super(key: key);
+  });
 
   @override
   State<ResultPage> createState() => _ResultPageState();
@@ -117,14 +117,14 @@ class _ResultPageState extends State<ResultPage> with SingleTickerProviderStateM
           icon: Icon(Icons.home_rounded, color: colors.textPrimary),
           onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
         ),
-        const SizedBox(width: 4),
+        AppSpacing.gapH(context, 4),
       ],
       body: Stack(
         clipBehavior: Clip.none,
         children: [
-          SingleChildScrollView(
-        padding: EdgeInsets.fromLTRB(padding, 4, padding, padding),
-        child: Column(
+          ResponsiveBody(
+            padding: AppSpacing.pageInsets(context, top: 4),
+            child: Column(
           children: [
             if (widget.name.isNotEmpty) ...[
               Text(
@@ -222,8 +222,8 @@ class _ResultPageState extends State<ResultPage> with SingleTickerProviderStateM
               ),
             ),
           ],
-        ),
-      ),
+            ),
+          ),
           if (_showSavedMessage)
             Positioned(
               top: 0,
@@ -231,35 +231,9 @@ class _ResultPageState extends State<ResultPage> with SingleTickerProviderStateM
               right: padding,
               child: AnimatedBuilder(
                 animation: _popupShakeAnimation,
-                builder: (context, child) {
-                  return Transform.translate(
-                    offset: Offset(_popupShakeAnimation.value, 0),
-                    child: child,
-                  );
-                },
-                child: Material(
-                  elevation: 8,
-                  shadowColor: Colors.black26,
-                  borderRadius: BorderRadius.circular(12),
-                  color: colors.button,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: colors.textPrimary.withValues(alpha: 0.7),
-                      ),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    child: Text(
-                      'Saved to history',
-                      style: TextStyle(
-                        color: colors.textPrimary,
-                        fontWeight: FontWeight.w600,
-                        fontSize: AppText.scale(context, 15),
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
+                builder: (context, _) => AppToastBanner(
+                  message: 'Saved to history',
+                  shakeOffset: _popupShakeAnimation.value,
                 ),
               ),
             ),

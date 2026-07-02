@@ -3,7 +3,6 @@ import 'Screens/welcome_page.dart';
 import 'Screens/SavedResults_Page.dart';
 import 'Services/theme_controller.dart';
 import 'constants.dart';
-import 'theme/app_palette.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -11,7 +10,7 @@ void main() {
 }
 
 class MyApp extends StatefulWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   State<MyApp> createState() => _MyAppState();

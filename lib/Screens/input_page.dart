@@ -9,11 +9,11 @@ import 'landing_page.dart';
 
 class InputPage extends StatefulWidget {
   const InputPage({
-    Key? key,
+    super.key,
     this.profileImage,
     this.initialName,
     this.initialAge,
-  }) : super(key: key);
+  });
 
   final File? profileImage;
   final String? initialName;
@@ -22,8 +22,6 @@ class InputPage extends StatefulWidget {
   @override
   State<InputPage> createState() => _InputPageState();
 }
-
-enum Gender { male, female }
 
 class _InputPageState extends State<InputPage> {
   int feet = 5;
@@ -74,7 +72,6 @@ class _InputPageState extends State<InputPage> {
 
   @override
   Widget build(BuildContext context) {
-    final padding = AppSpacing.page(context);
     final colors = context.colors;
     final fieldRadius = AppSpacing.radius(context, 12);
     final fieldPadding = EdgeInsets.symmetric(
@@ -104,8 +101,8 @@ class _InputPageState extends State<InputPage> {
         ),
         AppSpacing.gapH(context, 4),
       ],
-      body: SingleChildScrollView(
-        padding: EdgeInsets.fromLTRB(padding, 4, padding, padding),
+      body: ResponsiveBody(
+        padding: AppSpacing.pageInsets(context, top: 4),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -209,7 +206,10 @@ class _InputPageState extends State<InputPage> {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(fieldRadius),
-            borderSide: BorderSide(color: colors.primary, width: 2),
+            borderSide: BorderSide(
+              color: colors.primary,
+              width: AppSpacing.scale(context, 2),
+            ),
           ),
         ),
       ),

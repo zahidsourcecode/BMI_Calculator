@@ -38,6 +38,27 @@ class AppSpacing {
     final height = MediaQuery.sizeOf(context).height;
     return scale(context, base).clamp(160, height * 0.28);
   }
+
+  static double contentMaxWidth(BuildContext context) => scale(context, 520);
+
+  static EdgeInsets pageInsets(
+    BuildContext context, {
+    double top = 8,
+    double bottom = 0,
+  }) {
+    final side = page(context);
+    return EdgeInsets.fromLTRB(
+      side,
+      scale(context, top),
+      side,
+      bottom == 0 ? side : scale(context, bottom),
+    );
+  }
+
+  static EdgeInsets toastPadding(BuildContext context) => EdgeInsets.symmetric(
+        horizontal: scale(context, 16),
+        vertical: scale(context, 12),
+      );
 }
 
 class AppText {

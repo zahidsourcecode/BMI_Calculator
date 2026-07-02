@@ -399,3 +399,87 @@ class StatusBadge extends StatelessWidget {
 void openHistory(BuildContext context) {
   Navigator.pushNamed(context, '/history');
 }
+
+class ResponsiveBody extends StatelessWidget {
+  const ResponsiveBody({
+    required this.child,
+    this.padding,
+    this.scrollable = true,
+  });
+
+  final Widget child;
+  final EdgeInsets? padding;
+  final bool scrollable;
+
+  @override
+  Widget build(BuildContext context) {
+    final content = Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: AppSpacing.contentMaxWidth(context)),
+        child: child,
+      ),
+    );
+
+    if (!scrollable) {
+      return Padding(
+        padding: padding ?? EdgeInsets.zero,
+        child: content,
+      );
+    }
+
+    return SingleChildScrollView(
+      padding: padding,
+      child: content,
+    );
+  }
+}
+
+class AppToastBanner extends StatelessWidget {
+  const AppToastBanner({
+    required this.message,
+    required this.shakeOffset,
+    this.backgroundColor,
+    this.textColor,
+    this.borderColor,
+  });
+
+  final String message;
+  final double shakeOffset;
+  final Color? backgroundColor;
+  final Color? textColor;
+  final Color? borderColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final radius = AppSpacing.radius(context, 12);
+
+    return Transform.translate(
+      offset: Offset(shakeOffset, 0),
+      child: Material(
+        elevation: AppSpacing.scale(context, 8),
+        shadowColor: colors.primaryDark.withValues(alpha: 0.25),
+        borderRadius: BorderRadius.circular(radius),
+        color: backgroundColor ?? colors.button,
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(radius),
+            border: Border.all(
+              color: borderColor ?? colors.textPrimary.withValues(alpha: 0.7),
+            ),
+          ),
+          padding: AppSpacing.toastPadding(context),
+          child: Text(
+            message,
+            style: TextStyle(
+              color: textColor ?? colors.textPrimary,
+              fontWeight: FontWeight.w600,
+              fontSize: AppText.scale(context, 15),
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ),
+    );
+  }
+}

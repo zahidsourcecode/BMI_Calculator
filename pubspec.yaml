@@ -6,13 +6,13 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: ">=3.0.0 <4.0.0"
+  sdk: ">=3.12.0 <4.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
   shared_preferences: ^2.5.3
-  image_picker: ^1.1.2
+  image_picker: ^1.2.3
   image: ^4.5.4
   path_provider: ^2.1.5
 
@@ -38,3 +38,5 @@ flutter:
 dependency_overrides:
   win32: ^5.10.1
   flutter_plugin_android_lifecycle: ^2.0.35
+  image_picker_android: ^0.8.13+19
+  shared_preferences_android: ^2.4.26

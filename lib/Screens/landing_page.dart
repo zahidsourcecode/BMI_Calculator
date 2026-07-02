@@ -4,12 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import '../Services/image_helper.dart';
+import '../models/gender.dart';
 import '../constants.dart';
 import '../Widgets/app_ui.dart';
 import 'input_page.dart';
 
 class LandingPage extends StatefulWidget {
-  const LandingPage({Key? key}) : super(key: key);
+  const LandingPage({super.key});
 
   @override
   State<LandingPage> createState() => _LandingPageState();
@@ -93,7 +94,7 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
 
       final startedAt = DateTime.now();
       try {
-        final normalized = await ImageHelper.normalizeForDisplay(picked, source);
+        final normalized = await ImageHelper.normalizeForDisplay(picked);
         if (!mounted) return;
         setState(() => profileImage = normalized);
       } catch (_) {
@@ -133,26 +134,27 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
 
   void _showPhotoSheet() {
     final colors = context.colors;
+    final sheetRadius = AppSpacing.radius(context, 24);
     showModalBottomSheet(
       context: context,
       backgroundColor: colors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(sheetRadius)),
       ),
       builder: (context) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(height: 8),
+            AppSpacing.gap(context, 8),
             Container(
-              width: 40,
-              height: 4,
+              width: AppSpacing.scale(context, 40),
+              height: AppSpacing.scale(context, 4),
               decoration: BoxDecoration(
                 color: colors.border,
-                borderRadius: BorderRadius.circular(2),
+                borderRadius: BorderRadius.circular(AppSpacing.radius(context, 2)),
               ),
             ),
-            const SizedBox(height: 16),
+            AppSpacing.gap(context, 16),
             ListTile(
               leading: Icon(Icons.photo_camera_outlined, color: colors.primary),
               title: const Text('Take photo'),
@@ -178,7 +180,7 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
                   setState(() => profileImage = null);
                 },
               ),
-            const SizedBox(height: 8),
+            AppSpacing.gap(context, 8),
           ],
         ),
       ),
@@ -199,33 +201,33 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
           icon: Icon(Icons.home_rounded, color: colors.textPrimary),
           onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
         ),
-        const SizedBox(width: 4),
+        AppSpacing.gapH(context, 4),
       ],
       body: Stack(
         clipBehavior: Clip.none,
         children: [
           Padding(
-            padding: EdgeInsets.fromLTRB(padding, 8, padding, padding),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
+            padding: AppSpacing.pageInsets(context),
+            child: ResponsiveBody(
+              scrollable: true,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
                         Center(
                           child: Container(
                             padding: EdgeInsets.all(AppSpacing.scale(context, 6)),
                             decoration: BoxDecoration(
                               color: colors.surface,
                               shape: BoxShape.circle,
-                              border: Border.all(color: colors.border, width: 0.5),
+                              border: Border.all(
+                                color: colors.border,
+                                width: AppSpacing.scale(context, 0.5),
+                              ),
                               boxShadow: [
                                 BoxShadow(
                                   color: colors.primary.withValues(alpha: 0.12),
                                   blurRadius: AppSpacing.scale(context, 24),
-                                  spreadRadius: 2,
+                                  spreadRadius: AppSpacing.scale(context, 2),
                                 ),
                               ],
                             ),
@@ -307,11 +309,8 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
                           icon: Icons.arrow_forward_rounded,
                           onTap: _continue,
                         ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
           if (_showGenderWarning)
@@ -319,22 +318,14 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
               top: 0,
               left: padding,
               right: padding,
-              child: Material(
-                elevation: 8,
-                shadowColor: Colors.black26,
-                borderRadius: BorderRadius.circular(12),
-                color: Colors.yellow,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  child: Text(
-                    'Please select your gender',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.w600,
-                      fontSize: AppText.scale(context, 15),
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
+              child: AnimatedBuilder(
+                animation: _shakeAnimation,
+                builder: (context, _) => AppToastBanner(
+                  message: 'Please select your gender',
+                  shakeOffset: _shakeAnimation.value,
+                  backgroundColor: colors.warning,
+                  textColor: colors.isDark ? colors.textPrimary : colors.textOnCard,
+                  borderColor: colors.textOnCard.withValues(alpha: 0.35),
                 ),
               ),
             ),
@@ -371,8 +362,8 @@ class _PhotoLoadingOverlay extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             color: colors.primaryDark.withValues(alpha: 0.25),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
+            blurRadius: AppSpacing.scale(context, 16),
+            offset: Offset(0, AppSpacing.scale(context, 6)),
           ),
         ],
       ),
@@ -383,7 +374,7 @@ class _PhotoLoadingOverlay extends StatelessWidget {
             width: AppSpacing.scale(context, 36),
             height: AppSpacing.scale(context, 36),
             child: CircularProgressIndicator(
-              strokeWidth: 3,
+              strokeWidth: AppSpacing.scale(context, 3),
               color: colors.textPrimary,
               backgroundColor: colors.textPrimary.withValues(alpha: 0.2),
             ),
@@ -434,8 +425,8 @@ class _PhotoCircle extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             color: colors.primaryDark.withValues(alpha: 0.1),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+            blurRadius: AppSpacing.scale(context, 12),
+            offset: Offset(0, AppSpacing.scale(context, 4)),
           ),
         ],
         image: profileImage != null

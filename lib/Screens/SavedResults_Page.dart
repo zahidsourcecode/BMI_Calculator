@@ -8,7 +8,7 @@ import '../Widgets/app_ui.dart';
 import 'Results_Page.dart';
 
 class SavedResultsPage extends StatefulWidget {
-  const SavedResultsPage({Key? key}) : super(key: key);
+  const SavedResultsPage({super.key});
 
   @override
   State<SavedResultsPage> createState() => _SavedResultsPageState();
@@ -124,7 +124,7 @@ class _SavedResultsPageState extends State<SavedResultsPage> with SingleTickerPr
           icon: Icon(Icons.home_rounded, color: colors.textPrimary),
           onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
         ),
-        const SizedBox(width: 4),
+        AppSpacing.gapH(context, 4),
       ],
       body: _loading
           ? Center(child: CircularProgressIndicator(color: colors.primary))
@@ -139,35 +139,9 @@ class _SavedResultsPageState extends State<SavedResultsPage> with SingleTickerPr
                     right: padding,
                     child: AnimatedBuilder(
                       animation: _popupShakeAnimation,
-                      builder: (context, child) {
-                        return Transform.translate(
-                          offset: Offset(_popupShakeAnimation.value, 0),
-                          child: child,
-                        );
-                      },
-                      child: Material(
-                        elevation: 8,
-                        shadowColor: Colors.black26,
-                        borderRadius: BorderRadius.circular(12),
-                        color: colors.button,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: colors.textPrimary.withValues(alpha: 0.7),
-                            ),
-                          ),
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          child: Text(
-                            'Deleted',
-                            style: TextStyle(
-                              color: colors.textPrimary,
-                              fontWeight: FontWeight.w600,
-                              fontSize: AppText.scale(context, 15),
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
+                      builder: (context, _) => AppToastBanner(
+                        message: 'Deleted',
+                        shakeOffset: _popupShakeAnimation.value,
                       ),
                     ),
                   ),
@@ -207,23 +181,26 @@ class _SavedResultsPageState extends State<SavedResultsPage> with SingleTickerPr
     final colors = context.colors;
     final items = [..._results.reversed];
 
-    return ListView.separated(
-      padding: EdgeInsets.all(padding),
-      itemCount: items.length,
-      separatorBuilder: (_, __) => AppSpacing.gap(context, 12),
-      itemBuilder: (context, index) {
+    return Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: AppSpacing.contentMaxWidth(context)),
+        child: ListView.separated(
+          padding: EdgeInsets.all(padding),
+          itemCount: items.length,
+          separatorBuilder: (_, __) => AppSpacing.gap(context, 12),
+          itemBuilder: (context, index) {
         final result = items[index];
         return Dismissible(
           key: ValueKey(result.id),
           direction: DismissDirection.endToStart,
           background: Container(
             alignment: Alignment.centerRight,
-            padding: const EdgeInsets.only(right: 20),
+            padding: EdgeInsets.only(right: AppSpacing.scale(context, 20)),
             decoration: BoxDecoration(
               color: colors.danger.withValues(alpha: 0.85),
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(AppSpacing.radius(context, 20)),
             ),
-            child: const Icon(Icons.delete_outline, color: Colors.white),
+            child: Icon(Icons.delete_outline, color: colors.onPrimary),
           ),
           onDismissed: (_) => _deleteResult(result),
           child: _HistoryTile(
@@ -233,6 +210,8 @@ class _SavedResultsPageState extends State<SavedResultsPage> with SingleTickerPr
           ),
         );
       },
+        ),
+      ),
     );
   }
 
@@ -314,7 +293,7 @@ class _HistoryTile extends StatelessWidget {
               color: Colors.transparent,
               child: InkWell(
                 onTap: onTap,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppSpacing.radius(context, 12)),
                 child: Row(
                   children: [
                     if (hasImage) ...[
