@@ -37,6 +37,8 @@ build/
 android/.gradle/
 **/doc/api/
 **/ios/Flutter/.last_build_id
+server/node_modules/
+database/test_*.db
 
 # Generated files
 lib/generated_plugin_registrant.dart

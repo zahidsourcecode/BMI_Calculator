@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../Services/theme_controller.dart';
 import '../constants.dart';
 
 class AppBackground extends StatelessWidget {
@@ -28,19 +29,36 @@ class AppScaffold extends StatelessWidget {
     this.title,
     this.leading,
     this.actions,
+    this.showThemeBar = false,
   });
 
   final Widget body;
   final String? title;
   final Widget? leading;
   final List<Widget>? actions;
+  final bool showThemeBar;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final themeController = AppThemeScope.of(context);
+    final appBarActions = [
+      ...?actions,
+      IconButton(
+        tooltip: themeController.isDark ? 'Light mode' : 'Dark mode',
+        icon: Icon(
+          themeController.isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+          color: colors.textPrimary,
+        ),
+        onPressed: themeController.toggle,
+      ),
+      AppSpacing.gapH(context, 4),
+    ];
+
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       extendBodyBehindAppBar: true,
-      appBar: title != null || leading != null || actions != null
+      appBar: title != null || leading != null || actions != null || showThemeBar
           ? AppBar(
               title: title != null
                   ? Text(
@@ -52,7 +70,7 @@ class AppScaffold extends StatelessWidget {
                     )
                   : null,
               leading: leading,
-              actions: actions,
+              actions: appBarActions,
             )
           : null,
       body: AppBackground(child: SafeArea(child: body)),
@@ -146,7 +164,12 @@ class PrimaryButton extends StatelessWidget {
           foregroundColor: colors.onPrimary,
           disabledBackgroundColor: disabledFillColor,
           disabledForegroundColor: colors.onPrimary,
-          padding: EdgeInsets.symmetric(vertical: AppSpacing.scale(context, 16)),
+          padding: EdgeInsets.symmetric(
+            vertical: AppSpacing.scale(
+              context,
+              AppSpacing.isCompact(context) ? 13 : 16,
+            ),
+          ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppSpacing.radius(context, 16)),
           ),
@@ -197,7 +220,12 @@ class SecondaryButton extends StatelessWidget {
         style: FilledButton.styleFrom(
           backgroundColor: colors.button,
           foregroundColor: colors.onPrimary,
-          padding: EdgeInsets.symmetric(vertical: AppSpacing.scale(context, 14)),
+          padding: EdgeInsets.symmetric(
+            vertical: AppSpacing.scale(
+              context,
+              AppSpacing.isCompact(context) ? 11 : 14,
+            ),
+          ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppSpacing.radius(context, 16)),
           ),
@@ -267,7 +295,10 @@ class GenderChip extends StatelessWidget {
               Icon(
                 icon,
                 color: selected ? colors.onPrimary : colors.textOnCardMuted,
-                size: AppSpacing.icon(context, 52),
+                size: AppSpacing.icon(
+                  context,
+                  AppSpacing.isCompact(context) ? 44 : 52,
+                ),
               ),
               AppSpacing.gap(context, 4),
               Text(
@@ -405,14 +436,21 @@ class ResponsiveBody extends StatelessWidget {
     required this.child,
     this.padding,
     this.scrollable = true,
+    this.avoidKeyboard = true,
   });
 
   final Widget child;
   final EdgeInsets? padding;
   final bool scrollable;
+  final bool avoidKeyboard;
 
   @override
   Widget build(BuildContext context) {
+    final bottomInset = avoidKeyboard ? MediaQuery.viewInsetsOf(context).bottom : 0.0;
+    final edgePadding = (padding ?? EdgeInsets.zero).add(
+      EdgeInsets.only(bottom: bottomInset),
+    );
+
     final content = Center(
       child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth: AppSpacing.contentMaxWidth(context)),
@@ -422,13 +460,14 @@ class ResponsiveBody extends StatelessWidget {
 
     if (!scrollable) {
       return Padding(
-        padding: padding ?? EdgeInsets.zero,
+        padding: edgePadding,
         child: content,
       );
     }
 
     return SingleChildScrollView(
-      padding: padding,
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: edgePadding,
       child: content,
     );
   }

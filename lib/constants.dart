@@ -7,8 +7,17 @@ class AppSpacing {
   static const _designWidth = 390.0;
   static const _designHeight = 844.0;
 
+  static bool isCompact(BuildContext context) {
+    final size = MediaQuery.sizeOf(context);
+    return size.width < 360 || size.height < 640;
+  }
+
+  static bool isLandscape(BuildContext context) =>
+      MediaQuery.orientationOf(context) == Orientation.landscape;
+
   static double page(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
+    if (width < 320) return 10;
     if (width < 340) return 12;
     if (width < 360) return 16;
     return 20;
@@ -16,9 +25,18 @@ class AppSpacing {
 
   static double scale(BuildContext context, double value) {
     final size = MediaQuery.sizeOf(context);
-    final widthFactor = (size.width / _designWidth).clamp(0.82, 1.15);
-    final heightFactor = (size.height / _designHeight).clamp(0.85, 1.1);
-    return value * (widthFactor * 0.7 + heightFactor * 0.3);
+    final minSide = size.width < size.height ? size.width : size.height;
+    final widthFactor = (size.width / _designWidth).clamp(0.72, 1.15);
+    final heightFactor = (size.height / _designHeight).clamp(0.78, 1.1);
+    var scaled = value * (widthFactor * 0.7 + heightFactor * 0.3);
+
+    if (minSide < 340) {
+      scaled *= 0.92;
+    }
+    if (isLandscape(context) && size.height < 500) {
+      scaled *= 0.88;
+    }
+    return scaled;
   }
 
   static double icon(BuildContext context, double value) => scale(context, value);
@@ -36,10 +54,14 @@ class AppSpacing {
 
   static double photoSize(BuildContext context, {double base = 240}) {
     final height = MediaQuery.sizeOf(context).height;
-    return scale(context, base).clamp(160, height * 0.28);
+    final effectiveBase = isCompact(context) ? base * 0.82 : base;
+    return scale(context, effectiveBase).clamp(140, height * (isLandscape(context) ? 0.22 : 0.28));
   }
 
-  static double contentMaxWidth(BuildContext context) => scale(context, 520);
+  static double contentMaxWidth(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    return width < 600 ? width : scale(context, 520);
+  }
 
   static EdgeInsets pageInsets(
     BuildContext context, {
@@ -62,8 +84,11 @@ class AppSpacing {
 }
 
 class AppText {
-  static double scale(BuildContext context, double size) =>
-      AppSpacing.scale(context, size);
+  static double scale(BuildContext context, double size) {
+    final textScaler = MediaQuery.textScalerOf(context);
+    final scaled = AppSpacing.scale(context, size);
+    return textScaler.scale(scaled).clamp(scaled * 0.85, scaled * 1.15);
+  }
 
   static TextStyle display(BuildContext context) {
     final colors = context.colors;

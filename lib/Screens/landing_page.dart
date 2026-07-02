@@ -73,13 +73,13 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
       if (source == ImageSource.camera) {
         pickedFile = await _imagePicker.pickImage(
           source: source,
-          imageQuality: 85,
+          imageQuality: 80,
           preferredCameraDevice: CameraDevice.front,
         );
       } else {
         pickedFile = await _imagePicker.pickImage(
           source: source,
-          imageQuality: 85,
+          imageQuality: 80,
         );
       }
       if (pickedFile == null) return;
