@@ -75,6 +75,7 @@ class _InputPageState extends State<InputPage> {
   @override
   Widget build(BuildContext context) {
     final padding = AppSpacing.page(context);
+    final colors = context.colors;
     final fieldRadius = AppSpacing.radius(context, 12);
     final fieldPadding = EdgeInsets.symmetric(
       horizontal: AppSpacing.scale(context, 16),
@@ -84,7 +85,7 @@ class _InputPageState extends State<InputPage> {
     return AppScaffold(
       title: 'Measurements',
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
+        icon: Icon(Icons.arrow_back_rounded, color: colors.textPrimary),
         onPressed: () => Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const LandingPage()),
@@ -93,12 +94,12 @@ class _InputPageState extends State<InputPage> {
       actions: [
         IconButton(
           tooltip: 'History',
-          icon: const Icon(Icons.history_rounded, color: AppColors.textPrimary),
+          icon: Icon(Icons.history_rounded, color: colors.textPrimary),
           onPressed: () => openHistory(context),
         ),
         IconButton(
           tooltip: 'Home',
-          icon: const Icon(Icons.home_rounded, color: AppColors.textPrimary),
+          icon: Icon(Icons.home_rounded, color: colors.textPrimary),
           onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
         ),
         AppSpacing.gapH(context, 4),
@@ -108,15 +109,6 @@ class _InputPageState extends State<InputPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (widget.profileImage != null) ...[
-              Center(
-                child: CircleAvatar(
-                  radius: AppSpacing.scale(context, 36),
-                  backgroundImage: FileImage(widget.profileImage!),
-                ),
-              ),
-              AppSpacing.gap(context, 16),
-            ],
             _optionalField(
               controller: _nameController,
               hint: 'Enter your name (optional)',
@@ -173,7 +165,6 @@ class _InputPageState extends State<InputPage> {
             PrimaryButton(
               label: 'Calculate BMI',
               icon: Icons.calculate_outlined,
-              borderColor: AppColors.textPrimary,
               onTap: _calculate,
             ),
           ],
@@ -191,6 +182,7 @@ class _InputPageState extends State<InputPage> {
     List<TextInputFormatter>? inputFormatters,
     TextCapitalization textCapitalization = TextCapitalization.none,
   }) {
+    final colors = context.colors;
     return AppCard(
       child: TextField(
         controller: controller,
@@ -198,26 +190,26 @@ class _InputPageState extends State<InputPage> {
         inputFormatters: inputFormatters,
         textCapitalization: textCapitalization,
         style: AppText.cardBody(context).copyWith(
-          color: AppColors.textOnCard,
+          color: colors.textOnCard,
           fontSize: AppText.scale(context, 16),
         ),
         decoration: InputDecoration(
           hintText: hint,
           hintStyle: AppText.cardBody(context),
           filled: true,
-          fillColor: AppColors.surfaceLight,
+          fillColor: colors.surfaceLight,
           contentPadding: fieldPadding,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(fieldRadius),
-            borderSide: const BorderSide(color: AppColors.border),
+            borderSide: BorderSide(color: colors.border),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(fieldRadius),
-            borderSide: const BorderSide(color: AppColors.border),
+            borderSide: BorderSide(color: colors.border),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(fieldRadius),
-            borderSide: const BorderSide(color: AppColors.primary, width: 2),
+            borderSide: BorderSide(color: colors.primary, width: 2),
           ),
         ),
       ),

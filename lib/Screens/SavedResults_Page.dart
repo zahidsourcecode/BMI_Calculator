@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../Services/results_storage.dart';
 import '../constants.dart';
 import '../Widgets/app_ui.dart';
@@ -13,14 +14,48 @@ class SavedResultsPage extends StatefulWidget {
   State<SavedResultsPage> createState() => _SavedResultsPageState();
 }
 
-class _SavedResultsPageState extends State<SavedResultsPage> {
+class _SavedResultsPageState extends State<SavedResultsPage> with SingleTickerProviderStateMixin {
   List<BMIResult> _results = [];
   bool _loading = true;
+  bool _showDeletedMessage = false;
+  late final AnimationController _popupShakeController;
+  late final Animation<double> _popupShakeAnimation;
 
   @override
   void initState() {
     super.initState();
+    _popupShakeController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 1),
+    );
+    _popupShakeAnimation = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 0, end: -8), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: -8, end: 8), weight: 2),
+      TweenSequenceItem(tween: Tween(begin: 8, end: -8), weight: 2),
+      TweenSequenceItem(tween: Tween(begin: -8, end: 8), weight: 2),
+      TweenSequenceItem(tween: Tween(begin: 8, end: -6), weight: 2),
+      TweenSequenceItem(tween: Tween(begin: -6, end: 6), weight: 2),
+      TweenSequenceItem(tween: Tween(begin: 6, end: 0), weight: 1),
+    ]).animate(CurvedAnimation(parent: _popupShakeController, curve: Curves.easeInOut));
     _loadResults();
+  }
+
+  @override
+  void dispose() {
+    _popupShakeController.dispose();
+    super.dispose();
+  }
+
+  void _showDeletedPopup() {
+    HapticFeedback.lightImpact();
+    setState(() => _showDeletedMessage = true);
+    _popupShakeController.forward(from: 0);
+    Future.delayed(const Duration(seconds: 1), () {
+      if (mounted) {
+        setState(() => _showDeletedMessage = false);
+        _popupShakeController.reset();
+      }
+    });
   }
 
   Future<void> _loadResults() async {
@@ -40,6 +75,8 @@ class _SavedResultsPageState extends State<SavedResultsPage> {
 
     try {
       await ResultsStorage.deleteResult(result);
+      if (!mounted) return;
+      _showDeletedPopup();
     } catch (_) {
       if (!mounted) return;
       setState(() => _results = previous);
@@ -67,36 +104,80 @@ class _SavedResultsPageState extends State<SavedResultsPage> {
   @override
   Widget build(BuildContext context) {
     final padding = AppSpacing.page(context);
+    final colors = context.colors;
 
     return AppScaffold(
       title: 'History',
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
+        icon: Icon(Icons.arrow_back_rounded, color: colors.textPrimary),
         onPressed: () => Navigator.pop(context),
       ),
       actions: [
         if (_results.isNotEmpty)
           IconButton(
             tooltip: 'Clear all',
-            icon: const Icon(Icons.delete_sweep_outlined, color: AppColors.textPrimary),
+            icon: Icon(Icons.delete_sweep_outlined, color: colors.textPrimary),
             onPressed: _showClearDialog,
           ),
         IconButton(
           tooltip: 'Home',
-          icon: const Icon(Icons.home_rounded, color: AppColors.textPrimary),
+          icon: Icon(Icons.home_rounded, color: colors.textPrimary),
           onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
         ),
         const SizedBox(width: 4),
       ],
       body: _loading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
-          : _results.isEmpty
-              ? _buildEmptyState(padding)
-              : _buildList(padding),
+          ? Center(child: CircularProgressIndicator(color: colors.primary))
+          : Stack(
+              clipBehavior: Clip.none,
+              children: [
+                _results.isEmpty ? _buildEmptyState(padding) : _buildList(padding),
+                if (_showDeletedMessage)
+                  Positioned(
+                    top: 0,
+                    left: padding,
+                    right: padding,
+                    child: AnimatedBuilder(
+                      animation: _popupShakeAnimation,
+                      builder: (context, child) {
+                        return Transform.translate(
+                          offset: Offset(_popupShakeAnimation.value, 0),
+                          child: child,
+                        );
+                      },
+                      child: Material(
+                        elevation: 8,
+                        shadowColor: Colors.black26,
+                        borderRadius: BorderRadius.circular(12),
+                        color: colors.button,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: colors.textPrimary.withValues(alpha: 0.7),
+                            ),
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          child: Text(
+                            'Deleted',
+                            style: TextStyle(
+                              color: colors.textPrimary,
+                              fontWeight: FontWeight.w600,
+                              fontSize: AppText.scale(context, 15),
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
     );
   }
 
   Widget _buildEmptyState(double padding) {
+    final colors = context.colors;
     return Center(
       child: Padding(
         padding: EdgeInsets.all(padding * 2),
@@ -106,7 +187,7 @@ class _SavedResultsPageState extends State<SavedResultsPage> {
             Icon(
               Icons.history_rounded,
               size: AppSpacing.icon(context, 72),
-              color: AppColors.textMuted.withValues(alpha: 0.5),
+              color: colors.textMuted.withValues(alpha: 0.5),
             ),
             AppSpacing.gap(context, 20),
             Text('No history yet', style: AppText.headline(context)),
@@ -123,6 +204,7 @@ class _SavedResultsPageState extends State<SavedResultsPage> {
   }
 
   Widget _buildList(double padding) {
+    final colors = context.colors;
     final items = [..._results.reversed];
 
     return ListView.separated(
@@ -138,7 +220,7 @@ class _SavedResultsPageState extends State<SavedResultsPage> {
             alignment: Alignment.centerRight,
             padding: const EdgeInsets.only(right: 20),
             decoration: BoxDecoration(
-              color: AppColors.danger.withValues(alpha: 0.85),
+              color: colors.danger.withValues(alpha: 0.85),
               borderRadius: BorderRadius.circular(20),
             ),
             child: const Icon(Icons.delete_outline, color: Colors.white),
@@ -193,7 +275,7 @@ class _SavedResultsPageState extends State<SavedResultsPage> {
               Navigator.pop(dialogContext);
               _clearAll();
             },
-            child: const Text('Clear all', style: TextStyle(color: AppColors.danger)),
+            child: Text('Clear all', style: TextStyle(color: context.colors.danger)),
           ),
         ],
       ),
@@ -214,11 +296,12 @@ class _HistoryTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     final color = result.status == 'NORMAL'
-        ? AppColors.success
+        ? colors.success
         : result.status == 'UNDERWEIGHT'
-            ? AppColors.warning
-            : AppColors.danger;
+            ? colors.warning
+            : colors.danger;
     final hasImage = result.profileImagePath.isNotEmpty && File(result.profileImagePath).existsSync();
 
     return AppCard(
@@ -265,7 +348,7 @@ class _HistoryTile extends StatelessWidget {
                                 Icon(
                                   Icons.person_outline_rounded,
                                   size: AppSpacing.icon(context, 18),
-                                  color: AppColors.primaryDark,
+                                  color: colors.primaryDark,
                                 ),
                                 AppSpacing.gapH(context, 6),
                                 Expanded(
@@ -296,7 +379,7 @@ class _HistoryTile extends StatelessWidget {
           IconButton(
             tooltip: 'Delete',
             icon: Icon(Icons.close_rounded, size: AppSpacing.icon(context, 20)),
-            color: AppColors.textOnCardMuted,
+            color: colors.textOnCardMuted,
             onPressed: onDelete,
           ),
         ],

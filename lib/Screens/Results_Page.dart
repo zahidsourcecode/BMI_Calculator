@@ -70,10 +70,11 @@ class _ResultPageState extends State<ResultPage> with SingleTickerProviderStateM
     super.dispose();
   }
 
-  Color get _statusColor {
-    if (widget.resultText == 'NORMAL') return AppColors.success;
-    if (widget.resultText == 'UNDERWEIGHT') return AppColors.warning;
-    return AppColors.danger;
+  Color _statusColor(BuildContext context) {
+    final colors = context.colors;
+    if (widget.resultText == 'NORMAL') return colors.success;
+    if (widget.resultText == 'UNDERWEIGHT') return colors.warning;
+    return colors.danger;
   }
 
   String get _statusLabel {
@@ -97,22 +98,23 @@ class _ResultPageState extends State<ResultPage> with SingleTickerProviderStateM
   @override
   Widget build(BuildContext context) {
     final padding = AppSpacing.page(context);
+    final colors = context.colors;
 
     return AppScaffold(
       title: 'Your Result',
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
+        icon: Icon(Icons.arrow_back_rounded, color: colors.textPrimary),
         onPressed: () => Navigator.pop(context),
       ),
       actions: [
         IconButton(
           tooltip: 'History',
-          icon: const Icon(Icons.history_rounded, color: AppColors.textPrimary),
+          icon: Icon(Icons.history_rounded, color: colors.textPrimary),
           onPressed: () => openHistory(context),
         ),
         IconButton(
           tooltip: 'Home',
-          icon: const Icon(Icons.home_rounded, color: AppColors.textPrimary),
+          icon: Icon(Icons.home_rounded, color: colors.textPrimary),
           onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
         ),
         const SizedBox(width: 4),
@@ -124,13 +126,6 @@ class _ResultPageState extends State<ResultPage> with SingleTickerProviderStateM
         padding: EdgeInsets.fromLTRB(padding, 4, padding, padding),
         child: Column(
           children: [
-            if (widget.profileImage != null) ...[
-              CircleAvatar(
-                radius: AppSpacing.scale(context, 34),
-                backgroundImage: FileImage(widget.profileImage!),
-              ),
-              AppSpacing.gap(context, 16),
-            ],
             if (widget.name.isNotEmpty) ...[
               Text(
                 widget.name,
@@ -148,8 +143,8 @@ class _ResultPageState extends State<ResultPage> with SingleTickerProviderStateM
                   children: [
                     StatusBadge(
                       label: _statusLabel,
-                      color: _statusColor,
-                      backgroundColor: AppColors.surface,
+                      color: _statusColor(context),
+                      backgroundColor: colors.badgeSurface,
                       fontSize: 15,
                       padding: EdgeInsets.symmetric(
                         horizontal: AppSpacing.scale(context, 16),
@@ -161,14 +156,14 @@ class _ResultPageState extends State<ResultPage> with SingleTickerProviderStateM
                       widget.bmi,
                       style: AppText.display(context).copyWith(
                         fontSize: AppText.scale(context, 36),
-                        color: AppColors.textPrimary,
+                        color: colors.textPrimary,
                       ),
                     ),
                     AppSpacing.gapH(context, 6),
                     Text(
                       'kg / m²',
                       style: AppText.body(context).copyWith(
-                        color: AppColors.textPrimary,
+                        color: colors.textPrimary,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -183,7 +178,7 @@ class _ResultPageState extends State<ResultPage> with SingleTickerProviderStateM
                 widget.advise,
                 textAlign: TextAlign.center,
                 style: AppText.cardBody(context).copyWith(
-                  color: AppColors.textOnCard,
+                  color: colors.textOnCard,
                   fontSize: AppText.scale(context, 16),
                 ),
               ),
@@ -192,14 +187,14 @@ class _ResultPageState extends State<ResultPage> with SingleTickerProviderStateM
               child: Column(
                 children: [
                   _statRow('Healthy BMI range', '18.5 – 25'),
-                  _divider(),
+                  _divider(context),
                   _statRow('Healthy weight', widget.normalWeightRange),
-                  _divider(),
+                  _divider(context),
                   _statRow(
                     'To reach BMI 25',
                     widget.bmiValue > 25 ? 'Lose ${_amountToLose().toStringAsFixed(1)} kg' : 'On track',
                   ),
-                  _divider(),
+                  _divider(context),
                   _statRow('BMI Prime', (widget.bmiValue / 25).toStringAsFixed(2)),
                 ],
               ),
@@ -208,9 +203,6 @@ class _ResultPageState extends State<ResultPage> with SingleTickerProviderStateM
               label: _resultSaved ? 'Saved to history' : 'Save to history',
               icon: _resultSaved ? Icons.check_rounded : Icons.bookmark_add_outlined,
               enabled: !_resultSaved,
-              backgroundColor: AppColors.primary,
-              disabledBackgroundColor: AppColors.primary,
-              borderColor: AppColors.textPrimary,
               onTap: _saveResult,
             ),
             AppSpacing.gap(context, 12),
@@ -249,19 +241,19 @@ class _ResultPageState extends State<ResultPage> with SingleTickerProviderStateM
                   elevation: 8,
                   shadowColor: Colors.black26,
                   borderRadius: BorderRadius.circular(12),
-                  color: AppColors.primary,
+                  color: colors.button,
                   child: Container(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: AppColors.textPrimary.withValues(alpha: 0.7),
+                        color: colors.textPrimary.withValues(alpha: 0.7),
                       ),
                     ),
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     child: Text(
                       'Saved to history',
                       style: TextStyle(
-                        color: AppColors.textPrimary,
+                        color: colors.textPrimary,
                         fontWeight: FontWeight.w600,
                         fontSize: AppText.scale(context, 15),
                       ),
@@ -276,9 +268,9 @@ class _ResultPageState extends State<ResultPage> with SingleTickerProviderStateM
     );
   }
 
-  Widget _divider() => Padding(
+  Widget _divider(BuildContext context) => Padding(
         padding: EdgeInsets.symmetric(vertical: AppSpacing.scale(context, 12)),
-        child: Divider(color: AppColors.border.withValues(alpha: 0.5), height: 1),
+        child: Divider(color: context.colors.border.withValues(alpha: 0.5), height: 1),
       );
 
   Widget _statRow(String label, String value) {
@@ -288,7 +280,7 @@ class _ResultPageState extends State<ResultPage> with SingleTickerProviderStateM
         Text(
           value,
           style: TextStyle(
-            color: AppColors.textOnCard,
+            color: context.colors.textOnCard,
             fontWeight: FontWeight.w600,
             fontSize: AppText.scale(context, 14),
           ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 import '../constants.dart';
+import '../theme/app_palette.dart';
 
 class BMIGaugeWidget extends StatelessWidget {
   const BMIGaugeWidget({required this.bmi});
@@ -9,6 +10,7 @@ class BMIGaugeWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = context.colors;
     return LayoutBuilder(
       builder: (context, constraints) {
         final maxWidth = MediaQuery.sizeOf(context).width;
@@ -22,7 +24,7 @@ class BMIGaugeWidget extends StatelessWidget {
           width: width,
           height: height,
           child: CustomPaint(
-            painter: BMIGaugePainter(bmi: bmi),
+            painter: BMIGaugePainter(bmi: bmi, palette: palette),
           ),
         );
       },
@@ -31,9 +33,10 @@ class BMIGaugeWidget extends StatelessWidget {
 }
 
 class BMIGaugePainter extends CustomPainter {
-  BMIGaugePainter({required this.bmi});
+  BMIGaugePainter({required this.bmi, required this.palette});
 
   final double bmi;
+  final AppPalette palette;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -51,7 +54,7 @@ class BMIGaugePainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 30 * scale;
 
-    paint.color = const Color(0xFFF87171);
+    paint.color = palette.danger;
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius),
       -pi,
@@ -60,7 +63,7 @@ class BMIGaugePainter extends CustomPainter {
       paint,
     );
 
-    paint.color = AppColors.primaryDark;
+    paint.color = palette.primaryDark;
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius),
       -pi + (18.5 / 40) * pi,
@@ -69,7 +72,7 @@ class BMIGaugePainter extends CustomPainter {
       paint,
     );
 
-    paint.color = const Color(0xFFFBBF24);
+    paint.color = palette.warning;
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius),
       -pi + (25 / 40) * pi,
@@ -78,7 +81,7 @@ class BMIGaugePainter extends CustomPainter {
       paint,
     );
 
-    paint.color = const Color(0xFFF87171);
+    paint.color = palette.danger;
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius),
       -pi + (30 / 40) * pi,
@@ -92,7 +95,7 @@ class BMIGaugePainter extends CustomPainter {
 
   void _drawTickMarks(Canvas canvas, Offset center, double radius, double scale) {
     final paint = Paint()
-      ..color = AppColors.primaryDark
+      ..color = palette.primaryDark
       ..strokeWidth = 2 * scale;
 
     final values = [0, 10, 20, 30, 40];
@@ -112,7 +115,7 @@ class BMIGaugePainter extends CustomPainter {
         text: TextSpan(
           text: value.toString(),
           style: TextStyle(
-            color: AppColors.textPrimary,
+            color: palette.textPrimary,
             fontSize: 10 * scale,
           ),
         ),
@@ -132,7 +135,7 @@ class BMIGaugePainter extends CustomPainter {
     final angle = -pi + (bmi.clamp(0, 40) / 40) * pi;
 
     final needlePaint = Paint()
-      ..color = AppColors.textPrimary
+      ..color = palette.textPrimary
       ..strokeWidth = 3 * scale;
 
     final needleEnd = Offset(
@@ -168,7 +171,7 @@ class BMIGaugePainter extends CustomPainter {
       ..close();
 
     final trianglePaint = Paint()
-      ..color = AppColors.textPrimary
+      ..color = palette.textPrimary
       ..style = PaintingStyle.fill;
 
     canvas.drawPath(trianglePath, trianglePaint);
@@ -176,13 +179,13 @@ class BMIGaugePainter extends CustomPainter {
 
   void _drawCenterCircle(Canvas canvas, Offset center, double scale) {
     final paint = Paint()
-      ..color = AppColors.backgroundTop
+      ..color = palette.backgroundTop
       ..style = PaintingStyle.fill;
 
     canvas.drawCircle(center, 12 * scale, paint);
 
     final borderPaint = Paint()
-      ..color = AppColors.textPrimary
+      ..color = palette.textPrimary
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2 * scale;
 
@@ -190,5 +193,7 @@ class BMIGaugePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant BMIGaugePainter oldDelegate) => oldDelegate.bmi != bmi;
+  bool shouldRepaint(covariant BMIGaugePainter oldDelegate) {
+    return oldDelegate.bmi != bmi || oldDelegate.palette != palette;
+  }
 }

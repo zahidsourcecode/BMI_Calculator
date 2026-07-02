@@ -24,11 +24,6 @@ class ImageHelper {
       );
     }
 
-    // Some Android front-camera photos are saved mirrored in the pixels.
-    if (imageSource == ImageSource.camera && Platform.isAndroid) {
-      normalized = img.flipHorizontal(normalized);
-    }
-
     final encoded = img.encodeJpg(normalized, quality: 85);
     final tempDir = await getTemporaryDirectory();
     final outputPath =

@@ -8,12 +8,13 @@ class AppBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [AppColors.backgroundTop, AppColors.backgroundBottom],
+          colors: [colors.backgroundTop, colors.backgroundBottom],
         ),
       ),
       child: child,
@@ -36,12 +37,19 @@ class AppScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: title != null || leading != null || actions != null
           ? AppBar(
               title: title != null
-                  ? Text(title!, style: TextStyle(fontSize: AppText.scale(context, 17)))
+                  ? Text(
+                      title!,
+                      style: TextStyle(
+                        fontSize: AppText.scale(context, 17),
+                        color: colors.textPrimary,
+                      ),
+                    )
                   : null,
               leading: leading,
               actions: actions,
@@ -65,17 +73,18 @@ class AppCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Container(
       width: double.infinity,
       margin: margin ?? EdgeInsets.only(bottom: AppSpacing.scale(context, 14)),
       padding: padding ?? AppSpacing.cardPadding(context),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: colors.surface,
         borderRadius: BorderRadius.circular(AppSpacing.radius(context, 20)),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.6)),
+        border: Border.all(color: colors.border.withValues(alpha: 0.6)),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primaryDark.withValues(alpha: 0.12),
+            color: colors.primaryDark.withValues(alpha: 0.12),
             blurRadius: AppSpacing.scale(context, 16),
             offset: Offset(0, AppSpacing.scale(context, 6)),
           ),
@@ -121,8 +130,12 @@ class PrimaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fillColor = backgroundColor ?? AppColors.primary;
-    final disabledFillColor = disabledBackgroundColor ?? AppColors.border;
+    final colors = context.colors;
+    final fillColor = backgroundColor ?? colors.button;
+    final disabledFillColor = disabledBackgroundColor ?? colors.button.withValues(alpha: 0.55);
+    final border = BorderSide(
+      color: (borderColor ?? colors.textPrimary).withValues(alpha: 0.7),
+    );
 
     return SizedBox(
       width: double.infinity,
@@ -130,23 +143,21 @@ class PrimaryButton extends StatelessWidget {
         onPressed: enabled ? onTap : null,
         style: FilledButton.styleFrom(
           backgroundColor: enabled ? fillColor : disabledFillColor,
-          foregroundColor: AppColors.onPrimary,
+          foregroundColor: colors.onPrimary,
           disabledBackgroundColor: disabledFillColor,
-          disabledForegroundColor: AppColors.onPrimary,
+          disabledForegroundColor: colors.onPrimary,
           padding: EdgeInsets.symmetric(vertical: AppSpacing.scale(context, 16)),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppSpacing.radius(context, 16)),
           ),
-          side: borderColor != null
-              ? BorderSide(color: borderColor!.withValues(alpha: 0.7))
-              : BorderSide.none,
+          side: border,
           elevation: 0,
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (icon != null) ...[
-              Icon(icon, size: AppSpacing.icon(context, 20)),
+              Icon(icon, size: AppSpacing.icon(context, 20), color: colors.onPrimary),
               AppSpacing.gapH(context, 8),
             ],
             Text(
@@ -155,6 +166,7 @@ class PrimaryButton extends StatelessWidget {
                 fontSize: AppText.scale(context, 15),
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.5,
+                color: colors.onPrimary,
               ),
             ),
           ],
@@ -177,23 +189,26 @@ class SecondaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return SizedBox(
       width: double.infinity,
-      child: OutlinedButton(
+      child: FilledButton(
         onPressed: onTap,
-        style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.textPrimary,
-          side: BorderSide(color: AppColors.textPrimary.withValues(alpha: 0.7)),
+        style: FilledButton.styleFrom(
+          backgroundColor: colors.button,
+          foregroundColor: colors.onPrimary,
           padding: EdgeInsets.symmetric(vertical: AppSpacing.scale(context, 14)),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppSpacing.radius(context, 16)),
           ),
+          side: BorderSide(color: colors.textPrimary.withValues(alpha: 0.7)),
+          elevation: 0,
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (icon != null) ...[
-              Icon(icon, size: AppSpacing.icon(context, 18)),
+              Icon(icon, size: AppSpacing.icon(context, 18), color: colors.onPrimary),
               AppSpacing.gapH(context, 8),
             ],
             Text(
@@ -201,6 +216,7 @@ class SecondaryButton extends StatelessWidget {
               style: TextStyle(
                 fontWeight: FontWeight.w600,
                 fontSize: AppText.scale(context, 14),
+                color: colors.onPrimary,
               ),
             ),
           ],
@@ -225,22 +241,23 @@ class GenderChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           padding: EdgeInsets.symmetric(
-            vertical: AppSpacing.scale(context, 16),
-            horizontal: AppSpacing.scale(context, 10),
+            vertical: AppSpacing.scale(context, 10),
+            horizontal: AppSpacing.scale(context, 8),
           ),
           decoration: BoxDecoration(
-            color: selected ? AppColors.primary : AppColors.surfaceLight,
+            color: selected ? colors.button : colors.surfaceLight,
             borderRadius: BorderRadius.circular(AppSpacing.radius(context, 16)),
             border: Border.all(
               color: selected
-                  ? AppColors.textPrimary.withValues(alpha: 0.7)
-                  : AppColors.border,
+                  ? colors.textPrimary.withValues(alpha: 0.7)
+                  : colors.border,
               width: 1,
             ),
           ),
@@ -249,15 +266,15 @@ class GenderChip extends StatelessWidget {
             children: [
               Icon(
                 icon,
-                color: selected ? AppColors.onPrimary : AppColors.textOnCardMuted,
+                color: selected ? colors.onPrimary : colors.textOnCardMuted,
                 size: AppSpacing.icon(context, 52),
               ),
-              AppSpacing.gap(context, 8),
+              AppSpacing.gap(context, 4),
               Text(
                 label,
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
-                  color: selected ? AppColors.onPrimary : AppColors.textOnCardMuted,
+                  color: selected ? colors.onPrimary : colors.textOnCardMuted,
                   fontSize: AppText.scale(context, 13),
                 ),
               ),
@@ -317,8 +334,9 @@ class _RoundButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Material(
-      color: AppColors.surfaceLight,
+      color: onTap != null ? colors.button : colors.surfaceLight,
       borderRadius: BorderRadius.circular(AppSpacing.radius(context, 14)),
       child: InkWell(
         onTap: onTap,
@@ -329,7 +347,7 @@ class _RoundButton extends StatelessWidget {
           child: Icon(
             icon,
             size: AppSpacing.icon(context, 22),
-            color: onTap != null ? AppColors.textOnCard : AppColors.border,
+            color: onTap != null ? colors.onPrimary : colors.border,
           ),
         ),
       ),

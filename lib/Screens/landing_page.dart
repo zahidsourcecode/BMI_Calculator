@@ -89,6 +89,9 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
         _isProcessingPhoto = true;
       });
 
+      await Future<void>.delayed(Duration.zero);
+
+      final startedAt = DateTime.now();
       try {
         final normalized = await ImageHelper.normalizeForDisplay(picked, source);
         if (!mounted) return;
@@ -97,6 +100,11 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
         if (!mounted) return;
         setState(() => profileImage = picked);
       } finally {
+        const minLoader = Duration(milliseconds: 500);
+        final elapsed = DateTime.now().difference(startedAt);
+        if (elapsed < minLoader) {
+          await Future.delayed(minLoader - elapsed);
+        }
         if (mounted) setState(() => _isProcessingPhoto = false);
       }
     } catch (e) {
@@ -124,9 +132,10 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
   }
 
   void _showPhotoSheet() {
+    final colors = context.colors;
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.surface,
+      backgroundColor: colors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -139,13 +148,13 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: AppColors.border,
+                color: colors.border,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
             const SizedBox(height: 16),
             ListTile(
-              leading: const Icon(Icons.photo_camera_outlined, color: AppColors.primary),
+              leading: Icon(Icons.photo_camera_outlined, color: colors.primary),
               title: const Text('Take photo'),
               onTap: () {
                 Navigator.pop(context);
@@ -153,7 +162,7 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
               },
             ),
             ListTile(
-              leading: const Icon(Icons.photo_library_outlined, color: AppColors.primary),
+              leading: Icon(Icons.photo_library_outlined, color: colors.primary),
               title: const Text('Choose from gallery'),
               onTap: () {
                 Navigator.pop(context);
@@ -162,8 +171,8 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
             ),
             if (profileImage != null)
               ListTile(
-                leading: const Icon(Icons.delete_outline, color: AppColors.danger),
-                title: const Text('Remove photo', style: TextStyle(color: AppColors.danger)),
+                leading: Icon(Icons.delete_outline, color: colors.danger),
+                title: Text('Remove photo', style: TextStyle(color: colors.danger)),
                 onTap: () {
                   Navigator.pop(context);
                   setState(() => profileImage = null);
@@ -181,12 +190,13 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
     final padding = AppSpacing.page(context);
     final photoSize = AppSpacing.photoSize(context);
     final logoSize = AppSpacing.scale(context, 68);
+    final colors = context.colors;
 
     return AppScaffold(
       actions: [
         IconButton(
           tooltip: 'Home',
-          icon: const Icon(Icons.home_rounded, color: AppColors.textPrimary),
+          icon: Icon(Icons.home_rounded, color: colors.textPrimary),
           onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
         ),
         const SizedBox(width: 4),
@@ -208,12 +218,12 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
                           child: Container(
                             padding: EdgeInsets.all(AppSpacing.scale(context, 6)),
                             decoration: BoxDecoration(
-                              color: AppColors.surface,
+                              color: colors.surface,
                               shape: BoxShape.circle,
-                              border: Border.all(color: AppColors.border, width: 0.5),
+                              border: Border.all(color: colors.border, width: 0.5),
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppColors.primary.withValues(alpha: 0.12),
+                                  color: colors.primary.withValues(alpha: 0.12),
                                   blurRadius: AppSpacing.scale(context, 24),
                                   spreadRadius: 2,
                                 ),
@@ -273,18 +283,20 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
                           child: GestureDetector(
                             onTap: _isProcessingPhoto ? null : _showPhotoSheet,
                             child: Stack(
+                              clipBehavior: Clip.none,
                               alignment: Alignment.center,
                               children: [
-                                AnimatedSwitcher(
-                                  duration: const Duration(milliseconds: 250),
-                                  child: _PhotoCircle(
-                                    key: ValueKey(profileImage?.path ?? 'empty'),
-                                    size: photoSize,
-                                    profileImage: profileImage,
-                                    isBlurred: _isProcessingPhoto,
-                                  ),
+                                _PhotoCircle(
+                                  size: photoSize,
+                                  profileImage: profileImage,
+                                  isBlurred: _isProcessingPhoto,
                                 ),
-                                if (_isProcessingPhoto) _PhotoLoadingOverlay(size: photoSize),
+                                if (_isProcessingPhoto)
+                                  Positioned.fill(
+                                    child: Center(
+                                      child: _PhotoLoadingOverlay(size: photoSize),
+                                    ),
+                                  ),
                               ],
                             ),
                           ),
@@ -339,7 +351,9 @@ class _PhotoLoadingOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final colors = context.colors;
+    return IgnorePointer(
+      child: Container(
       width: size,
       height: size,
       margin: EdgeInsets.only(bottom: AppSpacing.scale(context, 10)),
@@ -349,14 +363,14 @@ class _PhotoLoadingOverlay extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppColors.primary.withValues(alpha: 0.72),
-            AppColors.primaryDark.withValues(alpha: 0.68),
+            colors.button.withValues(alpha: 0.82),
+            colors.primaryDark.withValues(alpha: 0.72),
           ],
         ),
-        border: Border.all(color: AppColors.textPrimary.withValues(alpha: 0.85), width: 2),
+        border: Border.all(color: colors.textPrimary.withValues(alpha: 0.85), width: 2),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primaryDark.withValues(alpha: 0.25),
+            color: colors.primaryDark.withValues(alpha: 0.25),
             blurRadius: 16,
             offset: const Offset(0, 6),
           ),
@@ -370,8 +384,8 @@ class _PhotoLoadingOverlay extends StatelessWidget {
             height: AppSpacing.scale(context, 36),
             child: CircularProgressIndicator(
               strokeWidth: 3,
-              color: AppColors.textPrimary,
-              backgroundColor: AppColors.textPrimary.withValues(alpha: 0.2),
+              color: colors.textPrimary,
+              backgroundColor: colors.textPrimary.withValues(alpha: 0.2),
             ),
           ),
           AppSpacing.gap(context, 12),
@@ -381,7 +395,7 @@ class _PhotoLoadingOverlay extends StatelessWidget {
               'Loading image...',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: AppColors.textPrimary,
+                color: colors.textPrimary,
                 fontWeight: FontWeight.w700,
                 fontSize: AppText.scale(context, 13),
                 letterSpacing: 0.3,
@@ -390,13 +404,13 @@ class _PhotoLoadingOverlay extends StatelessWidget {
           ),
         ],
       ),
+      ),
     );
   }
 }
 
 class _PhotoCircle extends StatelessWidget {
   const _PhotoCircle({
-    super.key,
     required this.size,
     required this.profileImage,
     this.isBlurred = false,
@@ -408,17 +422,18 @@ class _PhotoCircle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     final circle = Container(
       width: size,
       height: size,
       margin: EdgeInsets.only(bottom: AppSpacing.scale(context, 10)),
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: AppColors.surfaceLight,
-        border: Border.all(color: AppColors.border),
+        color: colors.surfaceLight,
+        border: Border.all(color: colors.border),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primaryDark.withValues(alpha: 0.1),
+            color: colors.primaryDark.withValues(alpha: 0.1),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -438,7 +453,7 @@ class _PhotoCircle extends StatelessWidget {
                 Icon(
                   Icons.add_a_photo_outlined,
                   size: AppSpacing.icon(context, 36),
-                  color: AppColors.textOnCardMuted,
+                  color: colors.isDark ? colors.textPrimary : colors.textOnCardMuted,
                 ),
                 AppSpacing.gap(context, 6),
                 Padding(
@@ -447,7 +462,7 @@ class _PhotoCircle extends StatelessWidget {
                     'Add photo',
                     textAlign: TextAlign.center,
                     style: AppText.cardBody(context).copyWith(
-                      color: Colors.black,
+                      color: colors.isDark ? colors.textPrimary : colors.textOnCard,
                       fontSize: AppText.scale(context, 12),
                       fontWeight: FontWeight.w600,
                     ),
