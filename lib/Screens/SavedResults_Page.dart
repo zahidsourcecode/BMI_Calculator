@@ -2,7 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../Services/results_storage.dart';
+import '../Services/results_repository.dart';
+import '../models/bmi_result.dart';
 import '../constants.dart';
 import '../Widgets/app_ui.dart';
 import 'Results_Page.dart';
@@ -59,24 +60,31 @@ class _SavedResultsPageState extends State<SavedResultsPage> with SingleTickerPr
   }
 
   Future<void> _loadResults() async {
-    final results = await ResultsStorage.getResults();
+    final local = await ResultsRepository.instance.getLocalResults();
     if (!mounted) return;
     setState(() {
-      _results = results;
+      _results = local;
       _loading = false;
     });
+
+    final synced = await ResultsRepository.instance.trySyncFromRemote();
+    if (!mounted || synced == null) return;
+    setState(() => _results = synced);
   }
 
   Future<void> _deleteResult(BMIResult result) async {
     final previous = List<BMIResult>.from(_results);
     setState(() {
-      _results.removeWhere((r) => ResultsStorage.matches(r, result));
+      _results.removeWhere((r) => ResultsRepository.instance.matches(r, result));
     });
 
-    try {
-      await ResultsStorage.deleteResult(result);
-      if (!mounted) return;
+    // Show the deleted notification immediately so the UI feels responsive.
+    if (mounted) {
       _showDeletedPopup();
+    }
+
+    try {
+      await ResultsRepository.instance.deleteResult(result);
     } catch (_) {
       if (!mounted) return;
       setState(() => _results = previous);
@@ -91,7 +99,7 @@ class _SavedResultsPageState extends State<SavedResultsPage> with SingleTickerPr
     setState(() => _results = []);
 
     try {
-      await ResultsStorage.clearResults();
+      await ResultsRepository.instance.clearResults();
     } catch (_) {
       if (!mounted) return;
       setState(() => _results = previous);

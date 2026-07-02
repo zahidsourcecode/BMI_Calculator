@@ -1,0 +1,15 @@
+{
+  "name": "bmi-calculator-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Local API for Your BMI app",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.10.0",
+    "cors": "^2.8.5",
+    "express": "^4.21.2"
+  }
+}

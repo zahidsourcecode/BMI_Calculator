@@ -2,7 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../Services/results_storage.dart';
+import '../Services/results_repository.dart';
+import '../models/bmi_result.dart';
 import '../Widgets/BMI_Gauge.dart';
 import '../constants.dart';
 import '../Widgets/app_ui.dart';
@@ -270,7 +271,7 @@ class _ResultPageState extends State<ResultPage> with SingleTickerProviderStateM
   }
 
   Future<void> _saveResult() async {
-    await ResultsStorage.saveResult(
+    await ResultsRepository.instance.saveResult(
       BMIResult(
         id: DateTime.now().microsecondsSinceEpoch.toString(),
         name: widget.name,
