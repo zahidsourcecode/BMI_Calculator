@@ -4,6 +4,7 @@ import 'dart:convert';
 class BMIResult {
   final String id;
   final String name;
+  final String age;
   final String bmi;
   final String status;
   final String normalWeightRange;
@@ -17,6 +18,7 @@ class BMIResult {
   BMIResult({
     String? id,
     this.name = '',
+    this.age = '',
     required this.bmi,
     required this.status,
     required this.normalWeightRange,
@@ -32,6 +34,7 @@ class BMIResult {
     return {
       'id': id,
       'name': name,
+      'age': age,
       'bmi': bmi,
       'status': status,
       'normalWeightRange': normalWeightRange,
@@ -52,6 +55,7 @@ class BMIResult {
     return BMIResult(
       id: map['id'] as String?,
       name: map['name']?.toString() ?? '',
+      age: map['age']?.toString() ?? '',
       bmi: map['bmi'] ?? '',
       status: map['status'] ?? '',
       normalWeightRange: map['normalWeightRange'] ?? '',

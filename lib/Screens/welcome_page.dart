@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../constants.dart';
-import '../widgets/app_ui.dart';
+import '../Widgets/app_ui.dart';
 import 'landing_page.dart';
 
 class WelcomePage extends StatelessWidget {
@@ -9,6 +9,7 @@ class WelcomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final padding = AppSpacing.page(context);
+    final logoSize = AppSpacing.scale(context, 72);
 
     return AppScaffold(
       body: Padding(
@@ -19,7 +20,7 @@ class WelcomePage extends StatelessWidget {
             const Spacer(),
             Center(
               child: Container(
-                padding: const EdgeInsets.all(14),
+                padding: EdgeInsets.all(AppSpacing.scale(context, 14)),
                 decoration: BoxDecoration(
                   color: AppColors.surface,
                   shape: BoxShape.circle,
@@ -27,15 +28,19 @@ class WelcomePage extends StatelessWidget {
                   boxShadow: [
                     BoxShadow(
                       color: AppColors.primary.withValues(alpha: 0.12),
-                      blurRadius: 24,
+                      blurRadius: AppSpacing.scale(context, 24),
                       spreadRadius: 2,
                     ),
                   ],
                 ),
-                child: Image.asset('assets/icon/appIcon.png', width: 72, height: 72),
+                child: Image.asset(
+                  'assets/icon/appIcon.png',
+                  width: logoSize,
+                  height: logoSize,
+                ),
               ),
             ),
-            const SizedBox(height: 24),
+            AppSpacing.gap(context, 24),
             Text(
               'Welcome to BMI Calculator',
               style: AppText.display(context),
@@ -50,7 +55,7 @@ class WelcomePage extends StatelessWidget {
                 MaterialPageRoute(builder: (context) => const LandingPage()),
               ),
             ),
-            const SizedBox(height: 12),
+            AppSpacing.gap(context, 12),
             SecondaryButton(
               label: 'See history',
               icon: Icons.history_rounded,

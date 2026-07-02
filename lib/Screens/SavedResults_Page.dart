@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import '../Services/results_storage.dart';
 import '../constants.dart';
-import '../widgets/app_ui.dart';
+import '../Widgets/app_ui.dart';
 import 'Results_Page.dart';
 
 class SavedResultsPage extends StatefulWidget {
@@ -103,10 +103,14 @@ class _SavedResultsPageState extends State<SavedResultsPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.history_rounded, size: 72, color: AppColors.textMuted.withValues(alpha: 0.5)),
-            const SizedBox(height: 20),
+            Icon(
+              Icons.history_rounded,
+              size: AppSpacing.icon(context, 72),
+              color: AppColors.textMuted.withValues(alpha: 0.5),
+            ),
+            AppSpacing.gap(context, 20),
             Text('No history yet', style: AppText.headline(context)),
-            const SizedBox(height: 8),
+            AppSpacing.gap(context, 8),
             Text(
               'Save a BMI result to see it here.',
               style: AppText.body(context),
@@ -124,7 +128,7 @@ class _SavedResultsPageState extends State<SavedResultsPage> {
     return ListView.separated(
       padding: EdgeInsets.all(padding),
       itemCount: items.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      separatorBuilder: (_, __) => AppSpacing.gap(context, 12),
       itemBuilder: (context, index) {
         final result = items[index];
         return Dismissible(
@@ -162,9 +166,9 @@ class _SavedResultsPageState extends State<SavedResultsPage> {
         builder: (context) => ResultPage(
           bmi: result.bmi,
           name: result.name,
+          age: result.age,
           resultText: result.status,
           advise: result.advice,
-          textColor: _statusColor(result.status),
           height: result.height,
           weight: result.weight,
           bmiValue: result.bmiBmi,
@@ -174,12 +178,6 @@ class _SavedResultsPageState extends State<SavedResultsPage> {
         ),
       ),
     );
-  }
-
-  Color _statusColor(String status) {
-    if (status == 'NORMAL') return AppColors.success;
-    if (status == 'UNDERWEIGHT') return AppColors.warning;
-    return AppColors.danger;
   }
 
   void _showClearDialog() {
@@ -225,7 +223,7 @@ class _HistoryTile extends StatelessWidget {
 
     return AppCard(
       margin: EdgeInsets.zero,
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(AppSpacing.scale(context, 16)),
       child: Row(
         children: [
           Expanded(
@@ -237,19 +235,26 @@ class _HistoryTile extends StatelessWidget {
                 child: Row(
                   children: [
                     if (hasImage) ...[
-                      CircleAvatar(radius: 24, backgroundImage: FileImage(File(result.profileImagePath))),
-                      const SizedBox(width: 14),
+                      CircleAvatar(
+                        radius: AppSpacing.scale(context, 24),
+                        backgroundImage: FileImage(File(result.profileImagePath)),
+                      ),
+                      AppSpacing.gapH(context, 14),
                     ] else
                       Container(
-                        width: 48,
-                        height: 48,
+                        width: AppSpacing.scale(context, 48),
+                        height: AppSpacing.scale(context, 48),
                         decoration: BoxDecoration(
                           color: color.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius: BorderRadius.circular(AppSpacing.radius(context, 14)),
                         ),
-                        child: Icon(Icons.monitor_weight_outlined, color: color),
+                        child: Icon(
+                          Icons.monitor_weight_outlined,
+                          color: color,
+                          size: AppSpacing.icon(context, 24),
+                        ),
                       ),
-                    const SizedBox(width: 14),
+                    AppSpacing.gapH(context, 14),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -259,10 +264,10 @@ class _HistoryTile extends StatelessWidget {
                               children: [
                                 Icon(
                                   Icons.person_outline_rounded,
-                                  size: 18,
+                                  size: AppSpacing.icon(context, 18),
                                   color: AppColors.primaryDark,
                                 ),
-                                const SizedBox(width: 6),
+                                AppSpacing.gapH(context, 6),
                                 Expanded(
                                   child: Text(
                                     result.name,
@@ -273,12 +278,12 @@ class _HistoryTile extends StatelessWidget {
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 6),
+                            AppSpacing.gap(context, 6),
                           ],
                           Text('BMI ${result.bmi}', style: AppText.cardHeadline(context)),
-                          const SizedBox(height: 4),
+                          AppSpacing.gap(context, 4),
                           StatusBadge(label: result.status, color: color),
-                          const SizedBox(height: 6),
+                          AppSpacing.gap(context, 6),
                           Text(_formatDate(result.savedDate), style: AppText.cardLabel(context)),
                         ],
                       ),
@@ -290,7 +295,7 @@ class _HistoryTile extends StatelessWidget {
           ),
           IconButton(
             tooltip: 'Delete',
-            icon: const Icon(Icons.close_rounded, size: 20),
+            icon: Icon(Icons.close_rounded, size: AppSpacing.icon(context, 20)),
             color: AppColors.textOnCardMuted,
             onPressed: onDelete,
           ),

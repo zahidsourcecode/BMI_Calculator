@@ -5,14 +5,13 @@ import 'package:flutter/services.dart';
 import '../Services/results_storage.dart';
 import '../Widgets/BMI_Gauge.dart';
 import '../constants.dart';
-import '../widgets/app_ui.dart';
+import '../Widgets/app_ui.dart';
 import 'input_page.dart';
 
 class ResultPage extends StatefulWidget {
   final String resultText;
   final String bmi;
   final String advise;
-  final Color textColor;
   final int height;
   final int weight;
   final double bmiValue;
@@ -20,10 +19,10 @@ class ResultPage extends StatefulWidget {
   final bool isSavedResult;
   final File? profileImage;
   final String name;
+  final String age;
 
   const ResultPage({
     Key? key,
-    required this.textColor,
     required this.resultText,
     required this.bmi,
     required this.advise,
@@ -34,6 +33,7 @@ class ResultPage extends StatefulWidget {
     this.isSavedResult = false,
     this.profileImage,
     this.name = '',
+    this.age = '',
   }) : super(key: key);
 
   @override
@@ -74,6 +74,12 @@ class _ResultPageState extends State<ResultPage> with SingleTickerProviderStateM
     if (widget.resultText == 'NORMAL') return AppColors.success;
     if (widget.resultText == 'UNDERWEIGHT') return AppColors.warning;
     return AppColors.danger;
+  }
+
+  String get _statusLabel {
+    final text = widget.resultText;
+    if (text.isEmpty) return text;
+    return text[0] + text.substring(1).toLowerCase();
   }
 
   void _showSavedToHistoryPopup() {
@@ -119,8 +125,11 @@ class _ResultPageState extends State<ResultPage> with SingleTickerProviderStateM
         child: Column(
           children: [
             if (widget.profileImage != null) ...[
-              CircleAvatar(radius: 34, backgroundImage: FileImage(widget.profileImage!)),
-              const SizedBox(height: 16),
+              CircleAvatar(
+                radius: AppSpacing.scale(context, 34),
+                backgroundImage: FileImage(widget.profileImage!),
+              ),
+              AppSpacing.gap(context, 16),
             ],
             if (widget.name.isNotEmpty) ...[
               Text(
@@ -128,28 +137,47 @@ class _ResultPageState extends State<ResultPage> with SingleTickerProviderStateM
                 style: AppText.headline(context),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 8),
+              AppSpacing.gap(context, 8),
             ],
-            Text(
-              widget.bmi,
-              style: AppText.display(context).copyWith(
-                fontSize: AppText.scale(context, 52),
-                color: AppColors.textPrimary,
+            Center(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    StatusBadge(
+                      label: _statusLabel,
+                      color: _statusColor,
+                      backgroundColor: AppColors.surface,
+                      fontSize: 15,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: AppSpacing.scale(context, 16),
+                        vertical: AppSpacing.scale(context, 8),
+                      ),
+                    ),
+                    AppSpacing.gapH(context, 12),
+                    Text(
+                      widget.bmi,
+                      style: AppText.display(context).copyWith(
+                        fontSize: AppText.scale(context, 36),
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    AppSpacing.gapH(context, 6),
+                    Text(
+                      'kg / m²',
+                      style: AppText.body(context).copyWith(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-            Text(
-              'kg / m²',
-              style: AppText.body(context).copyWith(color: AppColors.textPrimary),
-            ),
-            const SizedBox(height: 12),
-            StatusBadge(
-              label: widget.resultText,
-              color: _statusColor,
-              backgroundColor: AppColors.surface,
-            ),
-            const SizedBox(height: 36),
+            AppSpacing.gap(context, 12),
             BMIGaugeWidget(bmi: widget.bmiValue),
-            const SizedBox(height: 24),
             AppCard(
               child: Text(
                 widget.advise,
@@ -173,8 +201,6 @@ class _ResultPageState extends State<ResultPage> with SingleTickerProviderStateM
                   ),
                   _divider(),
                   _statRow('BMI Prime', (widget.bmiValue / 25).toStringAsFixed(2)),
-                  _divider(),
-                  _statRow('Ponderal Index', '${_ponderalIndex().toStringAsFixed(1)} kg/m³'),
                 ],
               ),
             ),
@@ -187,7 +213,7 @@ class _ResultPageState extends State<ResultPage> with SingleTickerProviderStateM
               borderColor: AppColors.textPrimary,
               onTap: _saveResult,
             ),
-            const SizedBox(height: 12),
+            AppSpacing.gap(context, 12),
             SecondaryButton(
               label: 'Calculate again',
               icon: Icons.refresh_rounded,
@@ -197,6 +223,7 @@ class _ResultPageState extends State<ResultPage> with SingleTickerProviderStateM
                   builder: (context) => InputPage(
                     profileImage: widget.profileImage,
                     initialName: widget.name,
+                    initialAge: widget.age,
                   ),
                 ),
                 (route) => route.isFirst,
@@ -250,7 +277,7 @@ class _ResultPageState extends State<ResultPage> with SingleTickerProviderStateM
   }
 
   Widget _divider() => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12),
+        padding: EdgeInsets.symmetric(vertical: AppSpacing.scale(context, 12)),
         child: Divider(color: AppColors.border.withValues(alpha: 0.5), height: 1),
       );
 
@@ -276,16 +303,12 @@ class _ResultPageState extends State<ResultPage> with SingleTickerProviderStateM
     return diff > 0 ? diff : 0;
   }
 
-  double _ponderalIndex() {
-    final h = widget.height / 100;
-    return widget.weight / (h * h * h);
-  }
-
   Future<void> _saveResult() async {
     await ResultsStorage.saveResult(
       BMIResult(
         id: DateTime.now().microsecondsSinceEpoch.toString(),
         name: widget.name,
+        age: widget.age,
         bmi: widget.bmi,
         status: widget.resultText,
         normalWeightRange: widget.normalWeightRange,

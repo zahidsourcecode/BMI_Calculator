@@ -27,14 +27,12 @@ class AppScaffold extends StatelessWidget {
     this.title,
     this.leading,
     this.actions,
-    this.bottomBar,
   });
 
   final Widget body;
   final String? title;
   final Widget? leading;
   final List<Widget>? actions;
-  final Widget? bottomBar;
 
   @override
   Widget build(BuildContext context) {
@@ -42,21 +40,14 @@ class AppScaffold extends StatelessWidget {
       extendBodyBehindAppBar: true,
       appBar: title != null || leading != null || actions != null
           ? AppBar(
-              title: title != null ? Text(title!) : null,
+              title: title != null
+                  ? Text(title!, style: TextStyle(fontSize: AppText.scale(context, 17)))
+                  : null,
               leading: leading,
               actions: actions,
             )
           : null,
-      body: AppBackground(
-        child: SafeArea(
-          child: Column(
-            children: [
-              Expanded(child: body),
-              if (bottomBar != null) bottomBar!,
-            ],
-          ),
-        ),
-      ),
+      body: AppBackground(child: SafeArea(child: body)),
     );
   }
 }
@@ -64,29 +55,29 @@ class AppScaffold extends StatelessWidget {
 class AppCard extends StatelessWidget {
   const AppCard({
     required this.child,
-    this.padding = const EdgeInsets.all(20),
+    this.padding,
     this.margin,
   });
 
   final Widget child;
-  final EdgeInsets padding;
+  final EdgeInsets? padding;
   final EdgeInsets? margin;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      margin: margin ?? const EdgeInsets.only(bottom: 14),
-      padding: padding,
+      margin: margin ?? EdgeInsets.only(bottom: AppSpacing.scale(context, 14)),
+      padding: padding ?? AppSpacing.cardPadding(context),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppSpacing.radius(context, 20)),
         border: Border.all(color: AppColors.border.withValues(alpha: 0.6)),
         boxShadow: [
           BoxShadow(
             color: AppColors.primaryDark.withValues(alpha: 0.12),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
+            blurRadius: AppSpacing.scale(context, 16),
+            offset: Offset(0, AppSpacing.scale(context, 6)),
           ),
         ],
       ),
@@ -96,25 +87,15 @@ class AppCard extends StatelessWidget {
 }
 
 class SectionTitle extends StatelessWidget {
-  const SectionTitle(this.text, {this.subtitle});
+  const SectionTitle(this.text);
 
   final String text;
-  final String? subtitle;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(text, style: AppText.headline(context)),
-          if (subtitle != null) ...[
-            const SizedBox(height: 4),
-            Text(subtitle!, style: AppText.body(context)),
-          ],
-        ],
-      ),
+      padding: EdgeInsets.only(bottom: AppSpacing.scale(context, 12)),
+      child: Text(text, style: AppText.headline(context)),
     );
   }
 }
@@ -152,8 +133,10 @@ class PrimaryButton extends StatelessWidget {
           foregroundColor: AppColors.onPrimary,
           disabledBackgroundColor: disabledFillColor,
           disabledForegroundColor: AppColors.onPrimary,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          padding: EdgeInsets.symmetric(vertical: AppSpacing.scale(context, 16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppSpacing.radius(context, 16)),
+          ),
           side: borderColor != null
               ? BorderSide(color: borderColor!.withValues(alpha: 0.7))
               : BorderSide.none,
@@ -163,8 +146,8 @@ class PrimaryButton extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (icon != null) ...[
-              Icon(icon, size: 20),
-              const SizedBox(width: 8),
+              Icon(icon, size: AppSpacing.icon(context, 20)),
+              AppSpacing.gapH(context, 8),
             ],
             Text(
               label,
@@ -201,17 +184,25 @@ class SecondaryButton extends StatelessWidget {
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.textPrimary,
           side: BorderSide(color: AppColors.textPrimary.withValues(alpha: 0.7)),
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          padding: EdgeInsets.symmetric(vertical: AppSpacing.scale(context, 14)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppSpacing.radius(context, 16)),
+          ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (icon != null) ...[
-              Icon(icon, size: 18),
-              const SizedBox(width: 8),
+              Icon(icon, size: AppSpacing.icon(context, 18)),
+              AppSpacing.gapH(context, 8),
             ],
-            Text(label, style: TextStyle(fontWeight: FontWeight.w600, fontSize: AppText.scale(context, 14))),
+            Text(
+              label,
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: AppText.scale(context, 14),
+              ),
+            ),
           ],
         ),
       ),
@@ -239,10 +230,13 @@ class GenderChip extends StatelessWidget {
         onTap: onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 10),
+          padding: EdgeInsets.symmetric(
+            vertical: AppSpacing.scale(context, 16),
+            horizontal: AppSpacing.scale(context, 10),
+          ),
           decoration: BoxDecoration(
             color: selected ? AppColors.primary : AppColors.surfaceLight,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppSpacing.radius(context, 16)),
             border: Border.all(
               color: selected
                   ? AppColors.textPrimary.withValues(alpha: 0.7)
@@ -253,8 +247,12 @@ class GenderChip extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, color: selected ? AppColors.onPrimary : AppColors.textOnCardMuted, size: 34),
-              const SizedBox(height: 8),
+              Icon(
+                icon,
+                color: selected ? AppColors.onPrimary : AppColors.textOnCardMuted,
+                size: AppSpacing.icon(context, 52),
+              ),
+              AppSpacing.gap(context, 8),
               Text(
                 label,
                 style: TextStyle(
@@ -286,38 +284,53 @@ class StepperControl extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final buttonSize = AppSpacing.scale(context, 48);
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _RoundButton(icon: Icons.remove, onTap: value > minValue ? onDecrement : null),
+        _RoundButton(
+          icon: Icons.remove,
+          size: buttonSize,
+          onTap: value > minValue ? onDecrement : null,
+        ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 28),
+          padding: EdgeInsets.symmetric(horizontal: AppSpacing.scale(context, 28)),
           child: Text('$value', style: AppText.cardValue(context)),
         ),
-        _RoundButton(icon: Icons.add, onTap: onIncrement),
+        _RoundButton(icon: Icons.add, size: buttonSize, onTap: onIncrement),
       ],
     );
   }
 }
 
 class _RoundButton extends StatelessWidget {
-  const _RoundButton({required this.icon, required this.onTap});
+  const _RoundButton({
+    required this.icon,
+    required this.size,
+    required this.onTap,
+  });
 
   final IconData icon;
+  final double size;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     return Material(
       color: AppColors.surfaceLight,
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(AppSpacing.radius(context, 14)),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppSpacing.radius(context, 14)),
         child: SizedBox(
-          width: 48,
-          height: 48,
-          child: Icon(icon, color: onTap != null ? AppColors.textOnCard : AppColors.border),
+          width: size,
+          height: size,
+          child: Icon(
+            icon,
+            size: AppSpacing.icon(context, 22),
+            color: onTap != null ? AppColors.textOnCard : AppColors.border,
+          ),
         ),
       ),
     );
@@ -329,16 +342,24 @@ class StatusBadge extends StatelessWidget {
     required this.label,
     required this.color,
     this.backgroundColor,
+    this.fontSize,
+    this.padding,
   });
 
   final String label;
   final Color color;
   final Color? backgroundColor;
+  final double? fontSize;
+  final EdgeInsets? padding;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+      padding: padding ??
+          EdgeInsets.symmetric(
+            horizontal: AppSpacing.scale(context, 14),
+            vertical: AppSpacing.scale(context, 6),
+          ),
       decoration: BoxDecoration(
         color: backgroundColor ?? color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(999),
@@ -349,7 +370,7 @@ class StatusBadge extends StatelessWidget {
         style: TextStyle(
           color: color,
           fontWeight: FontWeight.w700,
-          fontSize: AppText.scale(context, 12),
+          fontSize: AppText.scale(context, fontSize ?? 12),
           letterSpacing: 0.6,
         ),
       ),

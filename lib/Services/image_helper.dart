@@ -16,6 +16,14 @@ class ImageHelper {
 
     var normalized = img.bakeOrientation(decoded);
 
+    if (normalized.width > 800 || normalized.height > 800) {
+      normalized = img.copyResize(
+        normalized,
+        width: normalized.width >= normalized.height ? 800 : null,
+        height: normalized.height > normalized.width ? 800 : null,
+      );
+    }
+
     // Some Android front-camera photos are saved mirrored in the pixels.
     if (imageSource == ImageSource.camera && Platform.isAndroid) {
       normalized = img.flipHorizontal(normalized);

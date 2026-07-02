@@ -8,10 +8,8 @@ class AppColors {
   static const border = Color(0xFFB8E4EC);
   static const primary = Color(0xFF4EBDD3);
   static const primaryDark = Color(0xFF1A6B7A);
-  static const accent = Color(0xFF4EBDD3);
   static const success = Color(0xFF1A8F5C);
   static const warning = Color(0xFFD97706);
-  static const selected = Color(0xFFE65100);
   static const danger = Color(0xFFDC4C4C);
   static const textPrimary = Color(0xFFFFFFFF);
   static const textMuted = Color(0xE6FFFFFF);
@@ -21,14 +19,39 @@ class AppColors {
 }
 
 class AppSpacing {
-  static double page(BuildContext context) =>
-      MediaQuery.sizeOf(context).width < 360 ? 16 : 20;
+  static const _designWidth = 390.0;
+  static const _designHeight = 844.0;
 
-  static double section(BuildContext context) => scale(context, 24);
+  static double page(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    if (width < 340) return 12;
+    if (width < 360) return 16;
+    return 20;
+  }
 
   static double scale(BuildContext context, double value) {
-    final width = MediaQuery.sizeOf(context).width;
-    return value * (width / 390).clamp(0.88, 1.12);
+    final size = MediaQuery.sizeOf(context);
+    final widthFactor = (size.width / _designWidth).clamp(0.82, 1.15);
+    final heightFactor = (size.height / _designHeight).clamp(0.85, 1.1);
+    return value * (widthFactor * 0.7 + heightFactor * 0.3);
+  }
+
+  static double icon(BuildContext context, double value) => scale(context, value);
+
+  static double radius(BuildContext context, double value) => scale(context, value);
+
+  static SizedBox gap(BuildContext context, double height) =>
+      SizedBox(height: scale(context, height));
+
+  static SizedBox gapH(BuildContext context, double width) =>
+      SizedBox(width: scale(context, width));
+
+  static EdgeInsets cardPadding(BuildContext context) =>
+      EdgeInsets.all(scale(context, 20));
+
+  static double photoSize(BuildContext context, {double base = 240}) {
+    final height = MediaQuery.sizeOf(context).height;
+    return scale(context, base).clamp(160, height * 0.28);
   }
 }
 
@@ -36,7 +59,6 @@ class AppText {
   static double scale(BuildContext context, double size) =>
       AppSpacing.scale(context, size);
 
-  // On cyan background
   static TextStyle display(BuildContext context) => TextStyle(
         fontSize: scale(context, 32),
         fontWeight: FontWeight.w700,
@@ -56,21 +78,6 @@ class AppText {
         height: 1.45,
       );
 
-  static TextStyle label(BuildContext context) => TextStyle(
-        fontSize: scale(context, 12),
-        fontWeight: FontWeight.w600,
-        color: AppColors.textMuted,
-        letterSpacing: 0.8,
-      );
-
-  static TextStyle value(BuildContext context) => TextStyle(
-        fontSize: scale(context, 40),
-        fontWeight: FontWeight.w700,
-        color: AppColors.textPrimary,
-        height: 1,
-      );
-
-  // On white cards
   static TextStyle cardHeadline(BuildContext context) => TextStyle(
         fontSize: scale(context, 20),
         fontWeight: FontWeight.w600,

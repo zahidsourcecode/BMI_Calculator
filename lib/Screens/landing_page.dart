@@ -1,10 +1,11 @@
 import 'dart:io';
+import 'dart:ui' show ImageFilter;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import '../Services/image_helper.dart';
 import '../constants.dart';
-import '../widgets/app_ui.dart';
+import '../Widgets/app_ui.dart';
 import 'input_page.dart';
 
 class LandingPage extends StatefulWidget {
@@ -82,15 +83,19 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
       }
       if (pickedFile == null) return;
 
-      setState(() => _isProcessingPhoto = true);
-      try {
-        final normalized = await ImageHelper.normalizeForDisplay(
-          File(pickedFile.path),
-          source,
-        );
+      final picked = File(pickedFile.path);
+      setState(() {
+        profileImage = picked;
+        _isProcessingPhoto = true;
+      });
 
+      try {
+        final normalized = await ImageHelper.normalizeForDisplay(picked, source);
         if (!mounted) return;
         setState(() => profileImage = normalized);
+      } catch (_) {
+        if (!mounted) return;
+        setState(() => profileImage = picked);
       } finally {
         if (mounted) setState(() => _isProcessingPhoto = false);
       }
@@ -112,7 +117,6 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
       context,
       MaterialPageRoute(
         builder: (context) => InputPage(
-          preSelectedGender: selectedGender,
           profileImage: profileImage,
         ),
       ),
@@ -175,6 +179,8 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
   @override
   Widget build(BuildContext context) {
     final padding = AppSpacing.page(context);
+    final photoSize = AppSpacing.photoSize(context);
+    final logoSize = AppSpacing.scale(context, 68);
 
     return AppScaffold(
       actions: [
@@ -194,151 +200,107 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                  Center(
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: AppColors.border),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.primary.withValues(alpha: 0.12),
-                            blurRadius: 24,
-                            spreadRadius: 2,
-                          ),
-                        ],
-                      ),
-                      child: Image.asset('assets/icon/appIcon.png', width: 60, height: 60),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text('Your BMI', style: AppText.display(context), textAlign: TextAlign.center),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Understand your body metrics in few steps.',
-                    style: AppText.body(context),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  AnimatedBuilder(
-                    animation: _shakeAnimation,
-                    builder: (context, child) {
-                      return Transform.translate(
-                        offset: Offset(_shakeAnimation.value, 0),
-                        child: child,
-                      );
-                    },
+                  child: SingleChildScrollView(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        const SectionTitle('Gender'),
-                        Row(
-                          children: [
-                            GenderChip(
-                              label: 'Male',
-                              icon: Icons.man_outlined,
-                              selected: selectedGender == Gender.male,
-                              onTap: () => _selectGender(Gender.male),
+                        Center(
+                          child: Container(
+                            padding: EdgeInsets.all(AppSpacing.scale(context, 6)),
+                            decoration: BoxDecoration(
+                              color: AppColors.surface,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: AppColors.border, width: 0.5),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.primary.withValues(alpha: 0.12),
+                                  blurRadius: AppSpacing.scale(context, 24),
+                                  spreadRadius: 2,
+                                ),
+                              ],
                             ),
-                            const SizedBox(width: 12),
-                            GenderChip(
-                              label: 'Female',
-                              icon: Icons.woman_outlined,
-                              selected: selectedGender == Gender.female,
-                              onTap: () => _selectGender(Gender.female),
+                            child: Image.asset(
+                              'assets/icon/appIcon.png',
+                              width: logoSize,
+                              height: logoSize,
                             ),
-                          ],
+                          ),
+                        ),
+                        AppSpacing.gap(context, 12),
+                        Text('Your BMI', style: AppText.display(context), textAlign: TextAlign.center),
+                        AppSpacing.gap(context, 6),
+                        Text(
+                          'Understand your body metrics in few steps.',
+                          style: AppText.body(context),
+                          textAlign: TextAlign.center,
+                        ),
+                        AppSpacing.gap(context, 16),
+                        AnimatedBuilder(
+                          animation: _shakeAnimation,
+                          builder: (context, child) {
+                            return Transform.translate(
+                              offset: Offset(_shakeAnimation.value, 0),
+                              child: child,
+                            );
+                          },
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              const SectionTitle('Gender'),
+                              Row(
+                                children: [
+                                  GenderChip(
+                                    label: 'Male',
+                                    icon: Icons.man_outlined,
+                                    selected: selectedGender == Gender.male,
+                                    onTap: () => _selectGender(Gender.male),
+                                  ),
+                                  AppSpacing.gapH(context, 12),
+                                  GenderChip(
+                                    label: 'Female',
+                                    icon: Icons.woman_outlined,
+                                    selected: selectedGender == Gender.female,
+                                    onTap: () => _selectGender(Gender.female),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        AppSpacing.gap(context, 16),
+                        const SectionTitle('Photo (Optional)'),
+                        Center(
+                          child: GestureDetector(
+                            onTap: _isProcessingPhoto ? null : _showPhotoSheet,
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                AnimatedSwitcher(
+                                  duration: const Duration(milliseconds: 250),
+                                  child: _PhotoCircle(
+                                    key: ValueKey(profileImage?.path ?? 'empty'),
+                                    size: photoSize,
+                                    profileImage: profileImage,
+                                    isBlurred: _isProcessingPhoto,
+                                  ),
+                                ),
+                                if (_isProcessingPhoto) _PhotoLoadingOverlay(size: photoSize),
+                              ],
+                            ),
+                          ),
+                        ),
+                        AppSpacing.gap(context, 16),
+                        SecondaryButton(
+                          label: 'Get Started',
+                          icon: Icons.arrow_forward_rounded,
+                          onTap: _continue,
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  const SectionTitle('Photo'),
-                  Center(
-                    child: GestureDetector(
-                      onTap: _isProcessingPhoto ? null : _showPhotoSheet,
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          Container(
-                            width: AppSpacing.scale(context, 225),
-                            height: AppSpacing.scale(context, 225),
-                            margin: const EdgeInsets.only(bottom: 10),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: AppColors.surfaceLight,
-                              border: Border.all(color: AppColors.border),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColors.primaryDark.withValues(alpha: 0.1),
-                                  blurRadius: 12,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                              image: profileImage != null
-                                  ? DecorationImage(
-                                      image: FileImage(profileImage!),
-                                      fit: BoxFit.cover,
-                                      alignment: Alignment.center,
-                                    )
-                                  : null,
-                            ),
-                            child: profileImage == null
-                                ? Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Icons.add_a_photo_outlined,
-                                        size: 36,
-                                        color: AppColors.textOnCardMuted,
-                                      ),
-                                      const SizedBox(height: 6),
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                                        child: Text(
-                                          'Add photo',
-                                          textAlign: TextAlign.center,
-                                          style: AppText.cardBody(context).copyWith(
-                                            color: Colors.black,
-                                            fontSize: AppText.scale(context, 12),
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  )
-                                : null,
-                          ),
-                          if (_isProcessingPhoto)
-                            Container(
-                              width: AppSpacing.scale(context, 225),
-                              height: AppSpacing.scale(context, 225),
-                              margin: const EdgeInsets.only(bottom: 10),
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.black.withValues(alpha: 0.45),
-                              ),
-                              child: const Center(
-                                child: CircularProgressIndicator(
-                                  color: AppColors.textPrimary,
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const Spacer(),
-                  SecondaryButton(label: 'Get Started', icon: Icons.arrow_forward_rounded, onTap: _continue),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
           ),
           if (_showGenderWarning)
             Positioned(
@@ -365,6 +327,143 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+class _PhotoLoadingOverlay extends StatelessWidget {
+  const _PhotoLoadingOverlay({required this.size});
+
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      margin: EdgeInsets.only(bottom: AppSpacing.scale(context, 10)),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.primary.withValues(alpha: 0.72),
+            AppColors.primaryDark.withValues(alpha: 0.68),
+          ],
+        ),
+        border: Border.all(color: AppColors.textPrimary.withValues(alpha: 0.85), width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primaryDark.withValues(alpha: 0.25),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: AppSpacing.scale(context, 36),
+            height: AppSpacing.scale(context, 36),
+            child: CircularProgressIndicator(
+              strokeWidth: 3,
+              color: AppColors.textPrimary,
+              backgroundColor: AppColors.textPrimary.withValues(alpha: 0.2),
+            ),
+          ),
+          AppSpacing.gap(context, 12),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: AppSpacing.scale(context, 16)),
+            child: Text(
+              'Loading image...',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w700,
+                fontSize: AppText.scale(context, 13),
+                letterSpacing: 0.3,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PhotoCircle extends StatelessWidget {
+  const _PhotoCircle({
+    super.key,
+    required this.size,
+    required this.profileImage,
+    this.isBlurred = false,
+  });
+
+  final double size;
+  final File? profileImage;
+  final bool isBlurred;
+
+  @override
+  Widget build(BuildContext context) {
+    final circle = Container(
+      width: size,
+      height: size,
+      margin: EdgeInsets.only(bottom: AppSpacing.scale(context, 10)),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: AppColors.surfaceLight,
+        border: Border.all(color: AppColors.border),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primaryDark.withValues(alpha: 0.1),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        image: profileImage != null
+            ? DecorationImage(
+                image: FileImage(profileImage!),
+                fit: BoxFit.cover,
+                alignment: Alignment.center,
+              )
+            : null,
+      ),
+      child: profileImage == null
+          ? Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.add_a_photo_outlined,
+                  size: AppSpacing.icon(context, 36),
+                  color: AppColors.textOnCardMuted,
+                ),
+                AppSpacing.gap(context, 6),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: AppSpacing.scale(context, 12)),
+                  child: Text(
+                    'Add photo',
+                    textAlign: TextAlign.center,
+                    style: AppText.cardBody(context).copyWith(
+                      color: Colors.black,
+                      fontSize: AppText.scale(context, 12),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            )
+          : null,
+    );
+
+    if (!isBlurred) return circle;
+
+    return ClipOval(
+      child: ImageFiltered(
+        imageFilter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+        child: circle,
       ),
     );
   }

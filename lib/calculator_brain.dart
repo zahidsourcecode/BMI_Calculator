@@ -1,6 +1,4 @@
 import 'dart:math';
-import 'package:flutter/material.dart';
-import 'constants.dart';
 
 class Calculate {
   Calculate({required this.height, required this.weight});
@@ -28,12 +26,6 @@ class Calculate {
       return 'You are in a healthy BMI range. Keep up your current habits and stay active.';
     }
     return 'You are below the healthy BMI range. Consider nutrient-rich meals and consult a professional if needed.';
-  }
-
-  Color getTextColor() {
-    if (_bmi >= 25) return AppColors.danger;
-    if (_bmi >= 18.5) return AppColors.success;
-    return AppColors.warning;
   }
 
   double getBMI() => _bmi;

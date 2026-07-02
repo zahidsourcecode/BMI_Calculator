@@ -3,20 +3,20 @@ import 'dart:math';
 import '../constants.dart';
 
 class BMIGaugeWidget extends StatelessWidget {
-  final double bmi;
+  const BMIGaugeWidget({required this.bmi});
 
-  const BMIGaugeWidget({
-    required this.bmi,
-  });
+  final double bmi;
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
+        final maxWidth = MediaQuery.sizeOf(context).width;
         final width = constraints.maxWidth.isFinite
-            ? constraints.maxWidth.clamp(220.0, 360.0)
-            : 300.0;
-        final height = width * 0.52;
+            ? constraints.maxWidth.clamp(AppSpacing.scale(context, 220), AppSpacing.scale(context, 360))
+            : maxWidth.clamp(AppSpacing.scale(context, 220), AppSpacing.scale(context, 360));
+        final radius = width / 2.5;
+        final height = radius + AppSpacing.scale(context, 36);
 
         return SizedBox(
           width: width,
@@ -31,24 +31,25 @@ class BMIGaugeWidget extends StatelessWidget {
 }
 
 class BMIGaugePainter extends CustomPainter {
-  final double bmi;
-
   BMIGaugePainter({required this.bmi});
+
+  final double bmi;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height * 0.7);
+    final scale = size.width / 300;
+    final center = Offset(size.width / 2, size.height - 14 * scale);
     final radius = size.width / 2.5;
 
-    _drawGaugeBackground(canvas, center, radius);
-    _drawNeedle(canvas, center, radius);
-    _drawCenterCircle(canvas, center);
+    _drawGaugeBackground(canvas, center, radius, scale);
+    _drawNeedle(canvas, center, radius, scale);
+    _drawCenterCircle(canvas, center, scale);
   }
 
-  void _drawGaugeBackground(Canvas canvas, Offset center, double radius) {
+  void _drawGaugeBackground(Canvas canvas, Offset center, double radius, double scale) {
     final paint = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 30;
+      ..strokeWidth = 30 * scale;
 
     paint.color = const Color(0xFFF87171);
     canvas.drawArc(
@@ -86,24 +87,24 @@ class BMIGaugePainter extends CustomPainter {
       paint,
     );
 
-    _drawTickMarks(canvas, center, radius);
+    _drawTickMarks(canvas, center, radius, scale);
   }
 
-  void _drawTickMarks(Canvas canvas, Offset center, double radius) {
+  void _drawTickMarks(Canvas canvas, Offset center, double radius, double scale) {
     final paint = Paint()
       ..color = AppColors.primaryDark
-      ..strokeWidth = 2;
+      ..strokeWidth = 2 * scale;
 
     final values = [0, 10, 20, 30, 40];
-    for (var value in values) {
+    for (final value in values) {
       final angle = -pi + (value / 40) * pi;
       final start = Offset(
-        center.dx + (radius - 8) * cos(angle),
-        center.dy + (radius - 8) * sin(angle),
+        center.dx + (radius - 8 * scale) * cos(angle),
+        center.dy + (radius - 8 * scale) * sin(angle),
       );
       final end = Offset(
-        center.dx + (radius + 5) * cos(angle),
-        center.dy + (radius + 5) * sin(angle),
+        center.dx + (radius + 5 * scale) * cos(angle),
+        center.dy + (radius + 5 * scale) * sin(angle),
       );
       canvas.drawLine(start, end, paint);
 
@@ -112,7 +113,7 @@ class BMIGaugePainter extends CustomPainter {
           text: value.toString(),
           style: TextStyle(
             color: AppColors.textPrimary,
-            fontSize: 10,
+            fontSize: 10 * scale,
           ),
         ),
         textDirection: TextDirection.ltr,
@@ -120,28 +121,28 @@ class BMIGaugePainter extends CustomPainter {
       textPainter.layout();
 
       final labelOffset = Offset(
-        center.dx + (radius + 15) * cos(angle) - textPainter.width / 2,
-        center.dy + (radius + 15) * sin(angle) - textPainter.height / 2,
+        center.dx + (radius + 15 * scale) * cos(angle) - textPainter.width / 2,
+        center.dy + (radius + 15 * scale) * sin(angle) - textPainter.height / 2,
       );
       textPainter.paint(canvas, labelOffset);
     }
   }
 
-  void _drawNeedle(Canvas canvas, Offset center, double radius) {
+  void _drawNeedle(Canvas canvas, Offset center, double radius, double scale) {
     final angle = -pi + (bmi.clamp(0, 40) / 40) * pi;
 
     final needlePaint = Paint()
       ..color = AppColors.textPrimary
-      ..strokeWidth = 3;
+      ..strokeWidth = 3 * scale;
 
     final needleEnd = Offset(
-      center.dx + (radius - 20) * cos(angle),
-      center.dy + (radius - 20) * sin(angle),
+      center.dx + (radius - 20 * scale) * cos(angle),
+      center.dy + (radius - 20 * scale) * sin(angle),
     );
 
     canvas.drawLine(center, needleEnd, needlePaint);
 
-    final arrowSize = 14.0;
+    final arrowSize = 14.0 * scale;
     final baseCenter = Offset(
       needleEnd.dx - arrowSize * cos(angle),
       needleEnd.dy - arrowSize * sin(angle),
@@ -149,7 +150,7 @@ class BMIGaugePainter extends CustomPainter {
 
     final arrowAngle1 = angle + pi / 2;
     final arrowAngle2 = angle - pi / 2;
-    final baseWidth = 7.0;
+    final baseWidth = 7.0 * scale;
 
     final arrowPoint1 = Offset(
       baseCenter.dx + baseWidth * cos(arrowAngle1),
@@ -173,23 +174,21 @@ class BMIGaugePainter extends CustomPainter {
     canvas.drawPath(trianglePath, trianglePaint);
   }
 
-  void _drawCenterCircle(Canvas canvas, Offset center) {
+  void _drawCenterCircle(Canvas canvas, Offset center, double scale) {
     final paint = Paint()
       ..color = AppColors.backgroundTop
       ..style = PaintingStyle.fill;
 
-    canvas.drawCircle(center, 12, paint);
+    canvas.drawCircle(center, 12 * scale, paint);
 
     final borderPaint = Paint()
       ..color = AppColors.textPrimary
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
+      ..strokeWidth = 2 * scale;
 
-    canvas.drawCircle(center, 12, borderPaint);
+    canvas.drawCircle(center, 12 * scale, borderPaint);
   }
 
   @override
-  bool shouldRepaint(covariant BMIGaugePainter oldDelegate) {
-    return oldDelegate.bmi != bmi;
-  }
+  bool shouldRepaint(covariant BMIGaugePainter oldDelegate) => oldDelegate.bmi != bmi;
 }
